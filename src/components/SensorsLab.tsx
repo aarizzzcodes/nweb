@@ -21,6 +21,7 @@ import { SensorDetailModal } from './SensorDetailModal';
 import { SensorGuideModal } from './SensorGuideModal';
 import { SENSORS_DATA } from '../data/sensorsData';
 import { SensorCategory, SensorItem } from '../types';
+import { resolveMediaPath } from '../utils/media';
 
 interface CustomMediaItem {
   url: string;
@@ -206,10 +207,11 @@ export const SensorsLab: React.FC = () => {
             const activePhotoIdx = (cardPhotoIndexes[sensor.id] || 0) % (totalPhotos || 1);
 
             const activeCustomMedia = customPhotos[activePhotoIdx];
-            const defaultPhotoUrl =
+            const rawPhoto =
               activePhotoIdx === 0
-                ? (sensor.userUploadedFilename1 ? `/media/sensors/${sensor.userUploadedFilename1}` : sensor.recommendedPhoto)
-                : (sensor.userUploadedFilename2 ? `/media/sensors/${sensor.userUploadedFilename2}` : sensor.recommendedPhoto2 || sensor.recommendedPhoto);
+                ? (sensor.userUploadedFilename1 ? `media/sensors/${sensor.userUploadedFilename1}` : sensor.recommendedPhoto)
+                : (sensor.userUploadedFilename2 ? `media/sensors/${sensor.userUploadedFilename2}` : sensor.recommendedPhoto2 || sensor.recommendedPhoto);
+            const defaultPhotoUrl = resolveMediaPath(rawPhoto);
 
             return (
               <motion.div

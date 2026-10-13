@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SensorItem } from '../types';
+import { resolveMediaPath } from '../utils/media';
 
 interface SensorMediaItem {
   url: string;
@@ -78,13 +79,13 @@ export const SensorDetailModal: React.FC<SensorDetailModalProps> = ({
   if (galleryItems.length === 0) {
     if (sensor.userUploadedFilename1) {
       galleryItems.push({
-        url: `/media/sensors/${sensor.userUploadedFilename1}`,
+        url: resolveMediaPath(`media/sensors/${sensor.userUploadedFilename1}`),
         type: 'image',
         label: `Photo 1 (${sensor.userUploadedFilename1})`,
       });
     } else if (sensor.recommendedPhoto) {
       galleryItems.push({
-        url: sensor.recommendedPhoto,
+        url: resolveMediaPath(sensor.recommendedPhoto),
         type: 'image',
         label: 'Photo 1',
       });
@@ -92,13 +93,13 @@ export const SensorDetailModal: React.FC<SensorDetailModalProps> = ({
 
     if (sensor.userUploadedFilename2) {
       galleryItems.push({
-        url: `/media/sensors/${sensor.userUploadedFilename2}`,
+        url: resolveMediaPath(`media/sensors/${sensor.userUploadedFilename2}`),
         type: 'image',
         label: `Photo 2 (${sensor.userUploadedFilename2})`,
       });
     } else if (sensor.recommendedPhoto2) {
       galleryItems.push({
-        url: sensor.recommendedPhoto2,
+        url: resolveMediaPath(sensor.recommendedPhoto2),
         type: 'image',
         label: 'Photo 2',
       });
