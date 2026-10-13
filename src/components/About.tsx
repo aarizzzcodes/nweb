@@ -112,6 +112,8 @@ export const About: React.FC = () => {
                     {'{'}{'\n'}
                     {'  '}<span className="c-string">"architecture"</span>: <span className="c-string">"Distributed & Modular"</span>,{'\n'}
                     {'  '}<span className="c-string">"primaryTools"</span>: [<span className="c-string">"Node.js"</span>, <span className="c-string">"Python"</span>, <span className="c-string">"C++"</span>],{'\n'}
+                    {'  '}<span className="c-string">"github"</span>: <span className="c-string">"https://github.com/aarizzzcodes"</span>,{'\n'}
+                    {'  '}<span className="c-string">"email"</span>: <span className="c-string">"asheikQBTECH26@stu.alliance.edu.in"</span>,{'\n'}
                     {'  '}<span className="c-string">"coffeeConsumed"</span>: <span className="c-keyword">Infinity</span>,{'\n'}
                     {'  '}<span className="c-string">"status"</span>: <span className="c-string">"Online"</span>{'\n'}
                     {'}'}

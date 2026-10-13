@@ -23,23 +23,31 @@ A modern, fast, and interactive personal developer portfolio built with React, T
 ├── package.json                # Dependencies and Vite scripts
 ├── tsconfig.json               # TypeScript configuration
 ├── vite.config.ts              # Vite bundler configuration
+├── .gitignore                  # Git ignore rules for node_modules and builds
+├── public/
+│   ├── favicon.svg             # Custom portfolio glowing chip favicon
+│   └── media/sensors/          # Sensor photos and video directory
 ├── src/
 │   ├── components/
 │   │   ├── About.tsx           # Narrative & Interactive Terminal
 │   │   ├── ConstellationCanvas.tsx # Interactive background particle network
-│   │   ├── Contact.tsx         # Transmission form
+│   │   ├── Contact.tsx         # Transmission form & verified social hyperlinks
 │   │   ├── CustomCursor.tsx    # Smooth glowing trailing cursor
-│   │   ├── Footer.tsx          # Dynamic year & back-to-top
+│   │   ├── Footer.tsx          # Dynamic year & back-to-top button
 │   │   ├── Hero.tsx            # Typewriter header & CTAs
-│   │   ├── Icons.tsx           # SVG brand icons
+│   │   ├── Icons.tsx           # SVG brand icons (GitHub, LinkedIn, Mail)
 │   │   ├── Navbar.tsx          # Sticky glass navigation & mobile menu
-│   │   ├── Projects.tsx        # Portfolio showcase with category filtering
+│   │   ├── Projects.tsx        # Portfolio showcase with category filtering & Sensors subpart
+│   │   ├── SensorDetailModal.tsx # Interactive 2-photo sensor modal & specs viewer
+│   │   ├── SensorGuideModal.tsx # In-app visual photo upload guide modal
 │   │   ├── Skills.tsx          # Technical toolbelt 3D cards
 │   │   ├── TiltCard.tsx        # 3D perspective mouse physics component
 │   │   ├── Timeline.tsx        # Career milestone journey
 │   │   └── Toast.tsx           # Notification toast
+│   ├── data/
+│   │   └── sensorsData.ts      # Comprehensive sensors dataset (specs, pins, photos, wiring)
 │   ├── types.ts                # TypeScript data interfaces
-│   ├── App.tsx                 # Root application component
+│   ├── App.tsx                 # Root application component with Framer Motion animations
 │   ├── main.tsx                # React DOM mount point
 │   └── index.css               # Obsidian theme, glows, and animations
 └── README.md                   # Project documentation

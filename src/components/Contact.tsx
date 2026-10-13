@@ -32,7 +32,13 @@ export const Contact: React.FC<ContactProps> = ({ onShowToast }) => {
             <h2 className="section-title">Let's Build Something Exceptional</h2>
           </div>
           <p className="contact-lead">
-            Have a vision for a project or looking to collaborate? Drop me a message below.
+            Have a vision for a project or looking to collaborate? Drop me a message below or email directly at{' '}
+            <a
+              href="mailto:asheikQBTECH26@stu.alliance.edu.in"
+              style={{ color: 'var(--accent-cyan)', textDecoration: 'underline' }}
+            >
+              asheikQBTECH26@stu.alliance.edu.in
+            </a>.
           </p>
 
           <form className="contact-form" id="contactForm" onSubmit={handleSubmit}>

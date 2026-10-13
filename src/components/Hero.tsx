@@ -108,7 +108,7 @@ export const Hero: React.FC<HeroProps> = ({ onCopyEmail }) => {
           <button
             className="btn btn-secondary"
             id="copyEmailBtn"
-            onClick={() => onCopyEmail('aariz@example.com')}
+            onClick={() => onCopyEmail('asheikQBTECH26@stu.alliance.edu.in')}
           >
             <Copy size={18} /> Copy Email
           </button>
@@ -116,27 +116,27 @@ export const Hero: React.FC<HeroProps> = ({ onCopyEmail }) => {
 
         <motion.div variants={itemVariants} className="social-links">
           <a
-            href="https://github.com"
+            href="https://github.com/aarizzzcodes"
             target="_blank"
             rel="noreferrer"
             className="social-link"
-            title="GitHub"
+            title="GitHub (aarizzzcodes)"
           >
             <GithubIcon size={20} />
           </a>
           <a
-            href="https://linkedin.com"
+            href="https://www.linkedin.com/in/sheik-ali-aariz-315261353?utm_source=share_via&utm_content=profile&utm_medium=member_ios"
             target="_blank"
             rel="noreferrer"
             className="social-link"
-            title="LinkedIn"
+            title="LinkedIn (Sheik Ali Aariz)"
           >
             <LinkedinIcon size={20} />
           </a>
           <a
-            href="mailto:aariz@example.com"
+            href="mailto:asheikQBTECH26@stu.alliance.edu.in"
             className="social-link"
-            title="Email Aariz"
+            title="Email Aariz (asheikQBTECH26@stu.alliance.edu.in)"
           >
             <Mail size={20} />
           </a>
