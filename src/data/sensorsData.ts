@@ -260,9 +260,11 @@ void loop() {
   }
   delay(1000);
 }`,
-    recommendedPhoto: '/media/sensors/soil-moisture.jpg',
-    userUploadedFilename1: 'soil moisture.JPG',
-    photos: ['/media/sensors/soil moisture.JPG', '/media/sensors/soil-moisture.jpg'],
+    recommendedPhoto: '/media/sensors/soilmoisture.JPG',
+    recommendedPhoto2: '/media/sensors/soil moistture.JPG',
+    userUploadedFilename1: 'soilmoisture.JPG',
+    userUploadedFilename2: 'soil moistture.JPG',
+    photos: ['/media/sensors/soilmoisture.JPG', '/media/sensors/soil moistture.JPG'],
     recommendedVideo: '/media/sensors/soil-moisture-demo.mp4',
     simulation: {
       type: 'slider',
