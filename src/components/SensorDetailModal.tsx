@@ -7,132 +7,85 @@ import {
   Code2,
   Copy,
   CheckCircle2,
-  Upload,
-  Video,
   FileImage,
   Layers,
   Sparkles,
   ChevronLeft,
   ChevronRight,
-  Plus,
+  ShieldCheck,
+  Maximize2,
+  ZoomIn,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SensorItem } from '../types';
 import { resolveMediaPath } from '../utils/media';
-
-interface SensorMediaItem {
-  url: string;
-  type: 'image' | 'video';
-  label?: string;
-}
+import { SensorSchematicGraphic } from './SensorSchematicGraphic';
 
 interface SensorDetailModalProps {
-  sensor: SensorItem | null;
+  sensor: SensorItem;
   onClose: () => void;
-  customMediaList?: SensorMediaItem[];
-  onAttachMedia?: (sensorId: string, url: string, type: 'image' | 'video', slotIndex?: number) => void;
+  onOpenLightbox?: (photoIdx: number) => void;
 }
 
 export const SensorDetailModal: React.FC<SensorDetailModalProps> = ({
   sensor,
   onClose,
-  customMediaList = [],
-  onAttachMedia,
+  onOpenLightbox,
 }) => {
-  const [copiedCode, setCopiedCode] = useState(false);
   const [activePhotoIdx, setActivePhotoIdx] = useState(0);
-  const [simValue, setSimValue] = useState<number | boolean>(
-    sensor?.simulation?.initialValue ?? 0
-  );
-  const [triggerPulse, setTriggerPulse] = useState(false);
+  const [copiedCode, setCopiedCode] = useState(false);
+  const [activeTab, setActiveTab] = useState<'overview' | 'driver' | 'pinout' | 'simulation'>('overview');
 
-  if (!sensor) return null;
+  // Simulation state
+  const [sliderVal, setSliderVal] = useState<number>(
+    sensor.simulation?.type === 'slider' && typeof sensor.simulation.initialValue === 'number'
+      ? sensor.simulation.initialValue
+      : 0
+  );
+  const [toggleVal, setToggleVal] = useState<boolean>(
+    sensor.simulation?.type === 'toggle'
+      ? Boolean(sensor.simulation.initialValue)
+      : false
+  );
+  const [triggered, setTriggered] = useState<boolean>(false);
+
+  // Real photos resolution
+  const sensorPhotos = sensor.photos || [];
+  const hasPhotos = sensorPhotos.length > 0;
+  const resolvedPhotos = sensorPhotos.map((p) => resolveMediaPath(p));
+  const currentPhoto = resolvedPhotos[activePhotoIdx] || resolvedPhotos[0];
 
   const handleCopyCode = () => {
     navigator.clipboard.writeText(sensor.codeSnippet);
     setCopiedCode(true);
-    setTimeout(() => setCopiedCode(false), 2200);
-  };
-
-  const handleFileUpload = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    slotIndex: number = 0
-  ) => {
-    const file = e.target.files?.[0];
-    if (!file || !onAttachMedia) return;
-
-    const isVideo = file.type.startsWith('video');
-    const url = URL.createObjectURL(file);
-    onAttachMedia(sensor.id, url, isVideo ? 'video' : 'image', slotIndex);
-    setActivePhotoIdx(slotIndex);
+    setTimeout(() => setCopiedCode(false), 2000);
   };
 
   const handleTrigger = () => {
-    setTriggerPulse(true);
-    setTimeout(() => setTriggerPulse(false), 1200);
+    setTriggered(true);
+    setTimeout(() => setTriggered(false), 800);
   };
-
-  // Compile active gallery items (from customMediaList or sensor defaults)
-  const galleryItems: SensorMediaItem[] = [...customMediaList];
-
-  // If no custom media, populate with sensor suggested photos
-  if (galleryItems.length === 0) {
-    if (sensor.userUploadedFilename1) {
-      galleryItems.push({
-        url: resolveMediaPath(`media/sensors/${sensor.userUploadedFilename1}`),
-        type: 'image',
-        label: `Photo 1 (${sensor.userUploadedFilename1})`,
-      });
-    } else if (sensor.recommendedPhoto) {
-      galleryItems.push({
-        url: resolveMediaPath(sensor.recommendedPhoto),
-        type: 'image',
-        label: 'Photo 1',
-      });
-    }
-
-    if (sensor.userUploadedFilename2) {
-      galleryItems.push({
-        url: resolveMediaPath(`media/sensors/${sensor.userUploadedFilename2}`),
-        type: 'image',
-        label: `Photo 2 (${sensor.userUploadedFilename2})`,
-      });
-    } else if (sensor.recommendedPhoto2) {
-      galleryItems.push({
-        url: resolveMediaPath(sensor.recommendedPhoto2),
-        type: 'image',
-        label: 'Photo 2',
-      });
-    }
-  }
-
-  const currentItem = galleryItems[activePhotoIdx] || galleryItems[0];
 
   return (
     <AnimatePresence>
       <div className="sensor-modal-backdrop" onClick={onClose}>
         <motion.div
           className="sensor-detail-modal"
-          onClick={(e) => e.stopPropagation()}
-          initial={{ opacity: 0, scale: 0.95, y: 25 }}
+          initial={{ opacity: 0, scale: 0.95, y: 30 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 25 }}
-          transition={{ duration: 0.25 }}
+          exit={{ opacity: 0, scale: 0.95, y: 20 }}
+          transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] as const }}
+          onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
           <div className="sensor-modal-header">
             <div>
-              <div className="sensor-meta-pills">
-                <span className="badge category-pill">{sensor.categoryLabel}</span>
-                <span className="badge model-pill">{sensor.model}</span>
-                <span className="badge volt-pill">
-                  <Zap size={12} /> {sensor.voltage}
+              <div className="modal-category-row">
+                <span className="badge category-badge">{sensor.categoryLabel}</span>
+                <span className="badge sensor-model-badge">{sensor.model}</span>
+                <span className="badge backend-badge">
+                  <ShieldCheck size={12} color="#10b981" /> Backend Lab Verified
                 </span>
-                {galleryItems.length > 1 && (
-                  <span className="badge count-pill">
-                    <FileImage size={12} /> {galleryItems.length} Photos in Gallery
-                  </span>
-                )}
               </div>
               <h2>{sensor.name}</h2>
             </div>
@@ -142,67 +95,73 @@ export const SensorDetailModal: React.FC<SensorDetailModalProps> = ({
           </div>
 
           <div className="sensor-detail-body">
-            {/* Multi-Photo Gallery Showcase Section */}
+            {/* Gallery Showcase Section */}
             <div className="sensor-media-section">
               <div className="media-gallery-container">
                 {/* Main Display Window */}
                 <div className="media-player-wrapper">
-                  {currentItem?.type === 'video' ? (
-                    <video
-                      key={currentItem.url}
-                      src={currentItem.url}
-                      controls
-                      autoPlay
-                      muted
-                      loop
-                      className="sensor-media-box"
-                    />
+                  {hasPhotos && currentPhoto ? (
+                    <div className="modal-photo-stage">
+                      <img
+                        key={currentPhoto}
+                        src={currentPhoto}
+                        alt={`${sensor.name} - hardware photo ${activePhotoIdx + 1}`}
+                        className="sensor-media-box"
+                        onError={(e) => {
+                          (e.target as HTMLElement).style.display = 'none';
+                          const parent = (e.target as HTMLElement).parentElement;
+                          if (parent) {
+                            const fallback = parent.querySelector('.modal-schematic-fallback');
+                            if (fallback) (fallback as HTMLElement).style.display = 'block';
+                          }
+                        }}
+                      />
+
+                      {/* Fullscreen Lightbox Trigger Button */}
+                      <button
+                        className="modal-lightbox-expand-btn"
+                        onClick={() => onOpenLightbox && onOpenLightbox(activePhotoIdx)}
+                        title="Inspect full resolution in interactive lightbox"
+                      >
+                        <Maximize2 size={15} /> Expand HD (Zoom & Pan)
+                      </button>
+
+                      {/* Schematic Fallback if image fails to load */}
+                      <div className="modal-schematic-fallback" style={{ display: 'none', width: '100%', height: '320px' }}>
+                        <SensorSchematicGraphic
+                          sensorId={sensor.id}
+                          name={sensor.name}
+                          model={sensor.model}
+                          category={sensor.category}
+                          voltage={sensor.voltage}
+                          interfaceType={sensor.interfaceType}
+                          pins={sensor.pins}
+                        />
+                      </div>
+                    </div>
                   ) : (
-                    <img
-                      key={currentItem?.url}
-                      src={currentItem?.url}
-                      alt={`${sensor.name} - Photo ${activePhotoIdx + 1}`}
-                      className="sensor-media-box"
-                      onError={(e) => {
-                        // If file not yet placed in public, show styled placeholder
-                        (e.target as HTMLElement).style.display = 'none';
-                        const parent = (e.target as HTMLElement).parentElement;
-                        if (parent) {
-                          const fallback = parent.querySelector('.media-fallback-view');
-                          if (fallback) (fallback as HTMLElement).style.display = 'flex';
-                        }
-                      }}
-                    />
+                    // Crisp schematic graphic for sensors awaiting hardware capture
+                    <div style={{ width: '100%', height: '320px' }}>
+                      <SensorSchematicGraphic
+                        sensorId={sensor.id}
+                        name={sensor.name}
+                        model={sensor.model}
+                        category={sensor.category}
+                        voltage={sensor.voltage}
+                        interfaceType={sensor.interfaceType}
+                        pins={sensor.pins}
+                      />
+                    </div>
                   )}
 
-                  {/* Fallback View when local file hasn't been placed yet */}
-                  <div className="media-fallback-view" style={{ display: 'none' }}>
-                    <div className="fallback-card-inner">
-                      <Cpu size={36} className="circuit-icon" />
-                      <h4>Photo Slot Ready ({activePhotoIdx === 0 ? sensor.userUploadedFilename1 || 'Photo 1' : sensor.userUploadedFilename2 || 'Photo 2'})</h4>
-                      <p>
-                        Drop <code>{activePhotoIdx === 0 ? sensor.userUploadedFilename1 || sensor.recommendedPhoto : sensor.userUploadedFilename2 || sensor.recommendedPhoto2}</code> into <code>public/media/sensors/</code> or attach it now:
-                      </p>
-                      <label className="btn btn-primary" style={{ cursor: 'pointer' }}>
-                        <Upload size={16} /> Attach This Photo Now
-                        <input
-                          type="file"
-                          accept="image/*,video/*"
-                          style={{ display: 'none' }}
-                          onChange={(e) => handleFileUpload(e, activePhotoIdx)}
-                        />
-                      </label>
-                    </div>
-                  </div>
-
                   {/* Navigation Arrows if multiple photos */}
-                  {galleryItems.length > 1 && (
+                  {resolvedPhotos.length > 1 && (
                     <div className="gallery-nav-arrows">
                       <button
                         className="arrow-nav-btn left"
                         onClick={() =>
                           setActivePhotoIdx((prev) =>
-                            prev === 0 ? galleryItems.length - 1 : prev - 1
+                            prev === 0 ? resolvedPhotos.length - 1 : prev - 1
                           )
                         }
                         aria-label="Previous photo"
@@ -213,7 +172,7 @@ export const SensorDetailModal: React.FC<SensorDetailModalProps> = ({
                         className="arrow-nav-btn right"
                         onClick={() =>
                           setActivePhotoIdx((prev) =>
-                            prev === 0 ? 1 : (prev + 1) % galleryItems.length
+                            (prev + 1) % resolvedPhotos.length
                           )
                         }
                         aria-label="Next photo"
@@ -223,91 +182,14 @@ export const SensorDetailModal: React.FC<SensorDetailModalProps> = ({
                     </div>
                   )}
 
-                  {/* Active Photo Badge */}
-                  <div className="media-attached-badge">
-                    <span>
-                      Photo {activePhotoIdx + 1} of {galleryItems.length || 1}
-                    </span>
-                    {sensor.userUploadedFilename1 && (
-                      <span className="filename-tag">
-                        • {activePhotoIdx === 0 ? sensor.userUploadedFilename1 : sensor.userUploadedFilename2 || 'Photo 2'}
+                  {/* Photo Counter Badge (Clean Read-Only) */}
+                  {hasPhotos && resolvedPhotos.length > 1 && (
+                    <div className="media-attached-badge">
+                      <span>
+                        Photo {activePhotoIdx + 1} of {resolvedPhotos.length}
                       </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Photo 1 & Photo 2 Thumbnail Switcher / Upload Bar */}
-                <div className="gallery-thumbnail-toolbar">
-                  <div className="thumbnails-list">
-                    {/* Slot 1 */}
-                    <div
-                      className={`thumbnail-card ${activePhotoIdx === 0 ? 'active' : ''}`}
-                      onClick={() => setActivePhotoIdx(0)}
-                    >
-                      <span className="thumb-slot-num">1</span>
-                      <div className="thumb-info">
-                        <span className="thumb-name">
-                          {sensor.userUploadedFilename1 || 'Photo 1'}
-                        </span>
-                        <span className="thumb-status">
-                          {customMediaList[0] ? '✓ Uploaded' : 'Slot 1'}
-                        </span>
-                      </div>
-                      <label
-                        className="thumb-replace-btn"
-                        title="Upload/Change Photo 1"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <Upload size={13} />
-                        <input
-                          type="file"
-                          accept="image/*,video/*"
-                          style={{ display: 'none' }}
-                          onChange={(e) => handleFileUpload(e, 0)}
-                        />
-                      </label>
                     </div>
-
-                    {/* Slot 2 */}
-                    <div
-                      className={`thumbnail-card ${activePhotoIdx === 1 ? 'active' : ''}`}
-                      onClick={() => setActivePhotoIdx(1)}
-                    >
-                      <span className="thumb-slot-num">2</span>
-                      <div className="thumb-info">
-                        <span className="thumb-name">
-                          {sensor.userUploadedFilename2 || 'Photo 2'}
-                        </span>
-                        <span className="thumb-status">
-                          {customMediaList[1] ? '✓ Uploaded' : 'Slot 2'}
-                        </span>
-                      </div>
-                      <label
-                        className="thumb-replace-btn"
-                        title="Upload/Change Photo 2"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <Upload size={13} />
-                        <input
-                          type="file"
-                          accept="image/*,video/*"
-                          style={{ display: 'none' }}
-                          onChange={(e) => handleFileUpload(e, 1)}
-                        />
-                      </label>
-                    </div>
-                  </div>
-
-                  {/* Add Extra Media Button */}
-                  <label className="btn btn-secondary add-extra-photo-btn">
-                    <Plus size={15} /> Upload More Photos
-                    <input
-                      type="file"
-                      accept="image/*,video/*"
-                      style={{ display: 'none' }}
-                      onChange={(e) => handleFileUpload(e, galleryItems.length)}
-                    />
-                  </label>
+                  )}
                 </div>
               </div>
             </div>
@@ -319,163 +201,192 @@ export const SensorDetailModal: React.FC<SensorDetailModalProps> = ({
                 <span className="spec-val">{sensor.voltage}</span>
               </div>
               <div className="spec-item">
-                <span className="spec-label">Output Protocol</span>
+                <span className="spec-label">Interface Protocol</span>
                 <span className="spec-val">{sensor.interfaceType}</span>
               </div>
               <div className="spec-item">
-                <span className="spec-label">Module Architecture</span>
-                <span className="spec-val">{sensor.model}</span>
+                <span className="spec-label">Module Category</span>
+                <span className="spec-val">{sensor.categoryLabel}</span>
               </div>
               <div className="spec-item">
-                <span className="spec-label">Pin Count</span>
-                <span className="spec-val">{sensor.pins.length} Pins</span>
+                <span className="spec-label">Hardware Architecture</span>
+                <span className="spec-val">{sensor.model}</span>
               </div>
             </div>
 
-            {/* Interactive Simulation Sandbox */}
-            {sensor.simulation && (
-              <div className="simulation-sandbox-card">
-                <div className="sim-header">
-                  <div className="sim-title">
-                    <Activity size={18} className="pulse-icon" />
-                    <h4>Interactive Telemetry Simulator</h4>
-                  </div>
-                  <span className="sim-badge">Live Hardware Sandbox</span>
+            {/* Navigation Tabs */}
+            <div className="modal-tabs-nav">
+              <button
+                className={`tab-btn ${activeTab === 'overview' ? 'active' : ''}`}
+                onClick={() => setActiveTab('overview')}
+              >
+                Overview & Physics
+              </button>
+              <button
+                className={`tab-btn ${activeTab === 'driver' ? 'active' : ''}`}
+                onClick={() => setActiveTab('driver')}
+              >
+                Arduino C++ Driver
+              </button>
+              <button
+                className={`tab-btn ${activeTab === 'pinout' ? 'active' : ''}`}
+                onClick={() => setActiveTab('pinout')}
+              >
+                Pinout & Wiring Map
+              </button>
+              <button
+                className={`tab-btn ${activeTab === 'simulation' ? 'active' : ''}`}
+                onClick={() => setActiveTab('simulation')}
+              >
+                Live Simulator
+              </button>
+            </div>
+
+            {/* Tab 1: Overview */}
+            {activeTab === 'overview' && (
+              <div className="tab-pane">
+                <div className="modal-section-card">
+                  <h3>Working Principle & Physics</h3>
+                  <p className="working-principle-text">{sensor.workingPrinciple}</p>
                 </div>
 
-                <div className="sim-control-wrapper">
-                  {sensor.simulation.type === 'slider' && (
-                    <div className="slider-container">
+                <div className="modal-section-card">
+                  <h3>Practical Engineering Applications</h3>
+                  <ul className="applications-list">
+                    {sensor.applications.map((app, i) => (
+                      <li key={i}>
+                        <CheckCircle2 size={15} color="var(--accent-cyan)" />
+                        <span>{app}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            )}
+
+            {/* Tab 2: Arduino C++ Driver */}
+            {activeTab === 'driver' && (
+              <div className="tab-pane">
+                <div className="modal-section-card">
+                  <div className="code-header-bar">
+                    <span className="code-title">
+                      <Code2 size={16} /> Arduino C++ Firmware Driver
+                    </span>
+                    <button className="copy-code-btn" onClick={handleCopyCode}>
+                      {copiedCode ? <CheckCircle2 size={14} color="#10b981" /> : <Copy size={14} />}
+                      {copiedCode ? 'Copied to Clipboard' : 'Copy Code'}
+                    </button>
+                  </div>
+                  <pre className="code-block">
+                    <code>{sensor.codeSnippet}</code>
+                  </pre>
+                </div>
+              </div>
+            )}
+
+            {/* Tab 3: Pinout Map */}
+            {activeTab === 'pinout' && (
+              <div className="tab-pane">
+                <div className="modal-section-card">
+                  <h3>Pinout & Wiring Map</h3>
+                  <div className="pinout-table-wrapper">
+                    <table className="pinout-table">
+                      <thead>
+                        <tr>
+                          <th>Pin Label</th>
+                          <th>Type</th>
+                          <th>Signal Function</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {sensor.pins.map((pin, i) => (
+                          <tr key={i}>
+                            <td className="pin-name-cell">
+                              <code>{pin.name}</code>
+                            </td>
+                            <td>
+                              <span className={`pin-type-tag ${pin.type.toLowerCase()}`}>
+                                {pin.type}
+                              </span>
+                            </td>
+                            <td>{pin.description}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Tab 4: Live Simulator */}
+            {activeTab === 'simulation' && (
+              <div className="tab-pane">
+                <div className="modal-section-card simulation-card">
+                  <h3>Interactive Hardware Telemetry Simulator</h3>
+                  <p className="simulation-lead">
+                    Simulate real-world electrical response of the {sensor.model} microcontroller pinout.
+                  </p>
+
+                  {sensor.simulation?.type === 'slider' && (
+                    <div className="simulation-control-box">
                       <div className="slider-label-row">
                         <span>{sensor.simulation.label}</span>
-                        <span className="slider-val-badge">
-                          {simValue} {sensor.simulation.unit}
+                        <span className="telemetry-readout">
+                          {sliderVal} {sensor.simulation.unit}
                         </span>
                       </div>
                       <input
                         type="range"
                         min={sensor.simulation.min}
                         max={sensor.simulation.max}
-                        value={Number(simValue)}
-                        onChange={(e) => setSimValue(Number(e.target.value))}
-                        className="custom-range-slider"
+                        value={sliderVal}
+                        onChange={(e) => setSliderVal(Number(e.target.value))}
+                        className="sim-range-input"
                       />
+                      <div className="range-bounds-row">
+                        <span>{sensor.simulation.min} {sensor.simulation.unit}</span>
+                        <span>{sensor.simulation.max} {sensor.simulation.unit}</span>
+                      </div>
                     </div>
                   )}
 
-                  {sensor.simulation.type === 'toggle' && (
-                    <div className="toggle-container">
-                      <span>{sensor.simulation.label}</span>
+                  {sensor.simulation?.type === 'toggle' && (
+                    <div className="simulation-control-box">
+                      <div className="toggle-label-row">
+                        <span>{sensor.simulation.label}</span>
+                        <span className={`telemetry-state-pill ${toggleVal ? 'active' : ''}`}>
+                          {toggleVal ? 'HIGH (VCC Alert)' : 'LOW (Idle 0V)'}
+                        </span>
+                      </div>
                       <button
-                        className={`sim-toggle-btn ${simValue ? 'active' : ''}`}
-                        onClick={() => setSimValue(!simValue)}
+                        className={`sim-toggle-btn ${toggleVal ? 'active' : ''}`}
+                        onClick={() => setToggleVal((prev) => !prev)}
                       >
-                        <span className="toggle-indicator" />
-                        {simValue ? 'SIGNAL HIGH (ACTIVE)' : 'SIGNAL LOW (IDLE)'}
+                        <Zap size={16} /> Toggle Physical Input State
                       </button>
                     </div>
                   )}
 
-                  {sensor.simulation.type === 'trigger' && (
-                    <div className="trigger-container">
-                      <span>{sensor.simulation.label}</span>
+                  {sensor.simulation?.type === 'trigger' && (
+                    <div className="simulation-control-box">
+                      <div className="trigger-label-row">
+                        <span>{sensor.simulation.label}</span>
+                        <span className={`telemetry-state-pill ${triggered ? 'active' : ''}`}>
+                          {triggered ? 'PULSE DETECTED' : 'Awaiting Signal'}
+                        </span>
+                      </div>
                       <button
-                        className={`btn btn-primary sim-trigger-btn ${triggerPulse ? 'pulse' : ''}`}
+                        className={`sim-pulse-btn ${triggered ? 'pulsing' : ''}`}
                         onClick={handleTrigger}
                       >
-                        <Sparkles size={16} />
-                        {triggerPulse ? 'PULSE RECEIVED (INTERRUPT)' : 'DISPATCH SENSOR EVENT'}
+                        <Activity size={16} /> Send 38kHz Trigger Pulse
                       </button>
                     </div>
                   )}
                 </div>
               </div>
             )}
-
-            {/* Working Principle */}
-            <div className="detail-section">
-              <h3 className="section-subheading">
-                <Layers size={18} /> Working Principle & Signal Flow
-              </h3>
-              <p className="working-principle-text">{sensor.workingPrinciple}</p>
-            </div>
-
-            {/* Pinout Table */}
-            <div className="detail-section">
-              <h3 className="section-subheading">
-                <Cpu size={18} /> Hardware Pinout Configuration
-              </h3>
-              <div className="pinout-table-wrapper">
-                <table className="pinout-table">
-                  <thead>
-                    <tr>
-                      <th>Pin Identifier</th>
-                      <th>Signal Class</th>
-                      <th>Functional Role</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {sensor.pins.map((pin, i) => (
-                      <tr key={i}>
-                        <td>
-                          <code className="pin-code">{pin.name}</code>
-                        </td>
-                        <td>
-                          <span className={`pin-type-pill type-${pin.type.toLowerCase()}`}>
-                            {pin.type}
-                          </span>
-                        </td>
-                        <td>{pin.description}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Real World Applications */}
-            <div className="detail-section">
-              <h3 className="section-subheading">
-                <Activity size={18} /> Real-World Applications & Implementations
-              </h3>
-              <div className="app-tags-grid">
-                {sensor.applications.map((app, i) => (
-                  <div key={i} className="app-tag-item">
-                    <CheckCircle2 size={16} color="#00f2fe" />
-                    <span>{app}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Code Snippet */}
-            <div className="detail-section">
-              <div className="code-header-bar">
-                <h3 className="section-subheading" style={{ margin: 0 }}>
-                  <Code2 size={18} /> Microcontroller Driver Firmware (Arduino / C++)
-                </h3>
-                <button className="copy-code-btn" onClick={handleCopyCode}>
-                  {copiedCode ? <CheckCircle2 size={15} color="#10b981" /> : <Copy size={15} />}
-                  {copiedCode ? 'Copied to Clipboard!' : 'Copy Code'}
-                </button>
-              </div>
-              <pre className="sensor-code-pre">
-                <code>{sensor.codeSnippet}</code>
-              </pre>
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div className="sensor-modal-footer">
-            <span className="footer-tip">
-              Files: <code>public/media/sensors/{sensor.userUploadedFilename1 || sensor.recommendedPhoto}</code>
-              {sensor.userUploadedFilename2 && (
-                <> & <code>public/media/sensors/{sensor.userUploadedFilename2}</code></>
-              )}
-            </span>
-            <button className="btn btn-secondary" onClick={onClose}>
-              Close Inspector
-            </button>
           </div>
         </motion.div>
       </div>

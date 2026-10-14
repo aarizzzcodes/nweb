@@ -69,3 +69,31 @@ export interface Milestone {
   title: string;
   description: string;
 }
+
+export type ThemeId =
+  | 'cyan'       // Cyber Cyan (Original default)
+  | 'emerald'    // Matrix / Emerald Green
+  | 'violet'     // Quantum Violet / Neon Purple
+  | 'amber'      // Solar Flare / Amber Gold
+  | 'crimson'    // Synthwave / Neon Crimson
+  | 'midnight';  // Stealth Midnight Sapphire
+
+export interface ThemeConfig {
+  id: ThemeId;
+  name: string;
+  tagline: string;
+  previewColor: string;
+  accentCyan: string;
+  accentViolet: string;
+  accentEmerald: string;
+  accentGradient: string;
+  bgDeep: string;
+  borderGlow: string;
+}
+
+export type BackgroundAnimationMode =
+  | 'constellation' // Particle network physics
+  | 'circuit'       // Cybernetic animated circuit grid & data pulses
+  | 'warp'          // Deep space hyper-drive warp streams
+  | 'waves';        // Flowing harmonic cyber sine waves
+

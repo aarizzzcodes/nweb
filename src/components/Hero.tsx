@@ -1,147 +1,167 @@
-import React, { useState, useEffect } from 'react';
-import { ArrowRight, Copy, Mail } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { ArrowDown, Copy, ArrowRight, Sparkles, Terminal, Mail } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { GithubIcon, LinkedinIcon } from './Icons';
+import { OrganicAmberOrb } from './OrganicAmberOrb';
+import { useTextScramble } from '../hooks/useTextScramble';
+
+/**
+ * =========================================================================
+ * HERO CUSTOMIZATION CONFIGURATION
+ * Edit the values below to customize the headline text, scramble characters,
+ * timing, badge label, subtitle, and corner metadata.
+ * =========================================================================
+ */
+export const HERO_CONFIG = {
+  // Primary headline (2 lines like in the reference video: "BETWEEN AI" / "AND HUMANS")
+  headlineLine1: 'BETWEEN CODE',
+  headlineLine2: 'AND REALITY',
+
+  // Top badge text & category
+  badgeText: 'FULL-STACK SYSTEMS & HARDWARE LAB',
+
+  // Subtitle (Japanese minimal accent + English narrative)
+  subtitleJapanese: 'アイデアを洗練されたコードと電子工作へ',
+  subtitleEnglish: 'Engineering scalable web architectures, IoT sensor telemetry, and high-performance algorithms.',
+
+  // Corner metadata tags
+  locationTag: 'BENGALURU, 2026',
+  explorePrompt: 'SCROLL TO EXPLORE ↓',
+
+  // Scramble animation speed (in ms per shuffle) and reveal delay
+  scrambleSpeed: 28,
+  scrambleDelayLine1: 150,
+  scrambleDelayLine2: 380,
+};
 
 interface HeroProps {
   onCopyEmail: (email: string) => void;
+  // Triggered when the intro sequence upward wipe starts revealing the page
+  introFinished?: boolean;
 }
 
-const TYPEWRITER_PHRASES = [
-  'Scalable Web Architectures.',
-  'Hardware IoT Telemetry Systems.',
-  'Distributed High-Performance Code.',
-  'Creative Interactive Experiences.',
-];
+export const Hero: React.FC<HeroProps> = ({
+  onCopyEmail,
+  introFinished = true,
+}) => {
+  // Scramble hooks for Line 1 and Line 2
+  const {
+    displayText: line1Text,
+    trigger: triggerLine1,
+    isScrambling: isLine1Scrambling,
+  } = useTextScramble(HERO_CONFIG.headlineLine1, {
+    speed: HERO_CONFIG.scrambleSpeed,
+    revealDelay: HERO_CONFIG.scrambleDelayLine1,
+  });
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.12,
-      delayChildren: 0.1,
-    },
-  },
-};
+  const {
+    displayText: line2Text,
+    trigger: triggerLine2,
+    isScrambling: isLine2Scrambling,
+  } = useTextScramble(HERO_CONFIG.headlineLine2, {
+    speed: HERO_CONFIG.scrambleSpeed,
+    revealDelay: HERO_CONFIG.scrambleDelayLine2,
+  });
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 24 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.6,
-      ease: [0.22, 1, 0.36, 1] as const,
-    },
-  },
-};
-
-export const Hero: React.FC<HeroProps> = ({ onCopyEmail }) => {
-  const [displayText, setDisplayText] = useState('');
-  const [phraseIndex, setPhraseIndex] = useState(0);
-  const [charIndex, setCharIndex] = useState(0);
-  const [isDeleting, setIsDeleting] = useState(false);
-
+  // Trigger text scramble as soon as the intro overlay wipes upward
   useEffect(() => {
-    const currentPhrase = TYPEWRITER_PHRASES[phraseIndex];
-    let timeout: number;
-
-    if (!isDeleting) {
-      if (charIndex < currentPhrase.length) {
-        timeout = window.setTimeout(() => {
-          setDisplayText(currentPhrase.substring(0, charIndex + 1));
-          setCharIndex(charIndex + 1);
-        }, 70);
-      } else {
-        timeout = window.setTimeout(() => {
-          setIsDeleting(true);
-        }, 1800);
-      }
-    } else {
-      if (charIndex > 0) {
-        timeout = window.setTimeout(() => {
-          setDisplayText(currentPhrase.substring(0, charIndex - 1));
-          setCharIndex(charIndex - 1);
-        }, 35);
-      } else {
-        setIsDeleting(false);
-        setPhraseIndex((prev) => (prev + 1) % TYPEWRITER_PHRASES.length);
-        timeout = window.setTimeout(() => {}, 400);
-      }
+    if (introFinished) {
+      triggerLine1();
+      triggerLine2();
     }
+  }, [introFinished, triggerLine1, triggerLine2]);
 
-    return () => clearTimeout(timeout);
-  }, [charIndex, isDeleting, phraseIndex]);
+  const handleManualReScramble = () => {
+    triggerLine1();
+    triggerLine2();
+  };
 
   return (
-    <section className="hero-section" id="hero">
-      <motion.div
-        className="hero-content"
-        variants={containerVariants}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.2 }}
-      >
-        <motion.div variants={itemVariants} className="status-pill">
-          <span className="pulse-dot" />
-          <span>Available for New Ventures & Engineering Roles</span>
+    <section className="hero-reference-container" id="hero">
+      {/* 3D Organic Amber Orb with Inner Cavity sits directly behind the headline */}
+      <OrganicAmberOrb className="hero-orb-backdrop" />
+
+      {/* Hero Foreground Content */}
+      <div className="hero-reference-content">
+        {/* Top Minimal Badge / Geometric Emblem */}
+        <motion.div
+          className="hero-reference-badge"
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.15 }}
+        >
+          <div className="hero-emblem-ring">
+            <svg viewBox="0 0 24 24" fill="none" className="emblem-svg" stroke="currentColor">
+              <circle cx="12" cy="12" r="10" strokeWidth="1.2" />
+              <polygon points="12,5 18,17 6,17" strokeWidth="1.2" />
+              <circle cx="12" cy="13" r="1.5" fill="currentColor" />
+            </svg>
+          </div>
+          <span className="hero-badge-label">{HERO_CONFIG.badgeText}</span>
         </motion.div>
 
-        <motion.h1 variants={itemVariants} className="hero-title">
-          Hey, I'm <span className="gradient-text">Aariz</span>.
-        </motion.h1>
+        {/* Central Scrambling Headline */}
+        <motion.div
+          className="hero-headline-wrapper"
+          onClick={handleManualReScramble}
+          title="Click to re-scramble headline"
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.7, delay: 0.25 }}
+        >
+          <h1 className="hero-reference-title">
+            <span className="title-line line-1">
+              {line1Text}
+            </span>
+            <span className="title-line line-2">
+              {line2Text}
+            </span>
+          </h1>
+        </motion.div>
 
-        <motion.p variants={itemVariants} className="hero-subtitle">
-          I build <span className="typewriter-text">{displayText}</span>
-          <span className="cursor-blink">|</span>
-        </motion.p>
+        {/* Japanese Accent & English Narrative Subtitle */}
+        <motion.div
+          className="hero-reference-subtitle-box"
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.45 }}
+        >
+          <p className="subtitle-japanese">{HERO_CONFIG.subtitleJapanese}</p>
+          <p className="subtitle-english">{HERO_CONFIG.subtitleEnglish}</p>
+        </motion.div>
 
-        <motion.p variants={itemVariants} className="hero-description">
-          A passionate software engineer specializing in scalable full-stack applications, intelligent IoT systems, and high-performance algorithms. Turning ideas into elegant code.
-        </motion.p>
-
-        <motion.div variants={itemVariants} className="hero-actions">
-          <a href="#projects" className="btn btn-primary">
-            Explore Work <ArrowRight size={18} />
+        {/* Action CTAs */}
+        <motion.div
+          className="hero-reference-actions"
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.55 }}
+        >
+          <a href="#projects" className="btn btn-primary hero-cta-btn">
+            Explore Portfolio <ArrowRight size={17} />
+          </a>
+          <a href="#sensors-lab" className="btn btn-secondary hero-cta-btn">
+            <Sparkles size={16} /> Sensors Lab (22 Modules)
           </a>
           <button
-            className="btn btn-secondary"
-            id="copyEmailBtn"
+            className="btn btn-secondary hero-cta-btn"
             onClick={() => onCopyEmail('asheikQBTECH26@stu.alliance.edu.in')}
+            title="Copy email to clipboard"
           >
-            <Copy size={18} /> Copy Email
+            <Copy size={16} /> Copy Email
           </button>
         </motion.div>
+      </div>
 
-        <motion.div variants={itemVariants} className="social-links">
-          <a
-            href="https://github.com/aarizzzcodes"
-            target="_blank"
-            rel="noreferrer"
-            className="social-link"
-            title="GitHub (aarizzzcodes)"
-          >
-            <GithubIcon size={20} />
-          </a>
-          <a
-            href="https://www.linkedin.com/in/sheik-ali-aariz-315261353?utm_source=share_via&utm_content=profile&utm_medium=member_ios"
-            target="_blank"
-            rel="noreferrer"
-            className="social-link"
-            title="LinkedIn (Sheik Ali Aariz)"
-          >
-            <LinkedinIcon size={20} />
-          </a>
-          <a
-            href="mailto:asheikQBTECH26@stu.alliance.edu.in"
-            className="social-link"
-            title="Email Aariz (asheikQBTECH26@stu.alliance.edu.in)"
-          >
-            <Mail size={20} />
-          </a>
-        </motion.div>
-      </motion.div>
+      {/* Corner Minimal Metadata Tags (matching 0:01 - 0:13 in reference video) */}
+      <div className="hero-corner-meta left-corner">
+        <span className="meta-pulse-dot" />
+        <span className="meta-text">{HERO_CONFIG.locationTag}</span>
+      </div>
+
+      <a href="#about" className="hero-corner-meta right-corner" title="Scroll down to explore">
+        <span className="meta-text">{HERO_CONFIG.explorePrompt}</span>
+      </a>
     </section>
   );
 };

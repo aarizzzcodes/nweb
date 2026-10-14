@@ -45,7 +45,7 @@ void loop() {
     recommendedPhoto2: '/media/sensors/dht11-2.jpg',
     userUploadedFilename1: 'temp hum.JPG',
     userUploadedFilename2: 'temp hu.JPG',
-    photos: ['/media/sensors/temp hum.JPG', '/media/sensors/temp hu.JPG', '/media/sensors/dht11.jpg'],
+    photos: ['/media/sensors/temp hum.JPG', '/media/sensors/temp hu.JPG'],
     recommendedVideo: '/media/sensors/dht11-demo.mp4',
     simulation: {
       type: 'slider',
@@ -100,7 +100,7 @@ void loop() {
 }`,
     recommendedPhoto: '/media/sensors/hc-sr04.jpg',
     userUploadedFilename1: 'ultrasonic.JPG',
-    photos: ['/media/sensors/ultrasonic.JPG', '/media/sensors/hc-sr04.jpg'],
+    photos: ['/media/sensors/ultrasonic.JPG'],
     recommendedVideo: '/media/sensors/hc-sr04-demo.mp4',
     simulation: {
       type: 'slider',
@@ -791,7 +791,7 @@ void loop() {
 }`,
     recommendedPhoto: '/media/sensors/ky-024-hall-linear.jpg',
     userUploadedFilename1: 'magnetuc hallineear.JPG',
-    photos: ['/media/sensors/magnetuc hallineear.JPG', '/media/sensors/ky-024-hall-linear.jpg'],
+    photos: ['/media/sensors/magnetuc hallineear.JPG'],
     recommendedVideo: '/media/sensors/ky-024-demo.mp4',
     simulation: {
       type: 'slider',
@@ -890,7 +890,7 @@ void loop() {
     recommendedPhoto2: '/media/sensors/tilt-switch-2.jpg',
     userUploadedFilename1: 'angle tilt.JPG',
     userUploadedFilename2: 'angle tilt (2).JPG',
-    photos: ['/media/sensors/angle tilt.JPG', '/media/sensors/angle tilt (2).JPG', '/media/sensors/tilt-switch.jpg'],
+    photos: ['/media/sensors/angle tilt.JPG', '/media/sensors/angle tilt (2).JPG'],
     recommendedVideo: '/media/sensors/tilt-switch-demo.mp4',
     simulation: {
       type: 'toggle',
@@ -940,7 +940,7 @@ void loop() {
     recommendedPhoto2: '/media/sensors/ky-022-2.jpg',
     userUploadedFilename1: 'ir.jpg',
     userUploadedFilename2: 'ir2.JPG',
-    photos: ['/media/sensors/ir.jpg', '/media/sensors/ir2.JPG', '/media/sensors/ky-022-ir-receiver.jpg'],
+    photos: ['/media/sensors/ir.jpg', '/media/sensors/ir2.JPG'],
     recommendedVideo: '/media/sensors/ky-022-demo.mp4',
     simulation: {
       type: 'trigger',

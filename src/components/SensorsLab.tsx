@@ -7,27 +7,25 @@ import {
   Zap,
   Activity,
   Layers,
-  Upload,
   CheckCircle2,
   Sliders,
   FileImage,
   ChevronLeft,
   ChevronRight,
   Sparkles,
+  ShieldCheck,
+  Maximize2,
+  ZoomIn,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TiltCard } from './TiltCard';
 import { SensorDetailModal } from './SensorDetailModal';
 import { SensorGuideModal } from './SensorGuideModal';
+import { PhotoLightbox } from './PhotoLightbox';
+import { SensorSchematicGraphic } from './SensorSchematicGraphic';
 import { SENSORS_DATA } from '../data/sensorsData';
 import { SensorCategory, SensorItem } from '../types';
 import { resolveMediaPath } from '../utils/media';
-
-interface CustomMediaItem {
-  url: string;
-  type: 'image' | 'video';
-  label?: string;
-}
 
 export const SensorsLab: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<SensorCategory>('all');
@@ -35,41 +33,12 @@ export const SensorsLab: React.FC = () => {
   const [activeSensor, setActiveSensor] = useState<SensorItem | null>(null);
   const [guideOpen, setGuideOpen] = useState(false);
 
-  // Multi-photo custom attachments stored by sensorId
-  const [customMedia, setCustomMedia] = useState<
-    Record<string, { photos: CustomMediaItem[] }>
-  >({});
-
   // Active thumbnail index for cards with 2+ photos
   const [cardPhotoIndexes, setCardPhotoIndexes] = useState<Record<string, number>>({});
 
-  const handleAttachMedia = (
-    sensorId: string,
-    url: string,
-    type: 'image' | 'video',
-    slotIndex: number = 0
-  ) => {
-    setCustomMedia((prev) => {
-      const existing = prev[sensorId]?.photos ? [...prev[sensorId].photos] : [];
-      existing[slotIndex] = { url, type, label: `Photo ${slotIndex + 1}` };
-      return {
-        ...prev,
-        [sensorId]: { photos: existing },
-      };
-    });
-  };
-
-  const handleCardFileUpload = (
-    sensorId: string,
-    slotIndex: number,
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const isVideo = file.type.startsWith('video');
-    const url = URL.createObjectURL(file);
-    handleAttachMedia(sensorId, url, isVideo ? 'video' : 'image', slotIndex);
-  };
+  // Lightbox state for full HD inspection
+  const [lightboxSensor, setLightboxSensor] = useState<SensorItem | null>(null);
+  const [lightboxInitialIdx, setLightboxInitialIdx] = useState(0);
 
   const toggleCardPhoto = (sensorId: string, total: number, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -77,6 +46,12 @@ export const SensorsLab: React.FC = () => {
       ...prev,
       [sensorId]: ((prev[sensorId] || 0) + 1) % total,
     }));
+  };
+
+  const openLightbox = (sensor: SensorItem, photoIdx: number = 0, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setLightboxSensor(sensor);
+    setLightboxInitialIdx(photoIdx);
   };
 
   const filteredSensors = SENSORS_DATA.filter((sensor) => {
@@ -145,20 +120,20 @@ export const SensorsLab: React.FC = () => {
             <span>Hardware Bench & Microcontroller Telemetry</span>
           </div>
 
-          <h3 className="sensors-hero-title">
-            IoT & Hardware <span className="gradient-text">Sensors Laboratory</span>
-          </h3>
+          <h2 className="section-title">
+            Sensor Architecture & <span className="text-gradient">Hardware Lab</span>
+          </h2>
 
-          <p className="sensors-hero-desc">
-            Explore 22 physical sensor modules calibrated and programmed on Arduino Uno & ESP32. Sensors can feature <strong>multiple workbench photos</strong> (Photo 1 & Photo 2) for circuit views and testing in action.
+          <p className="section-lead">
+            Interactive engineering documentation for 22 sensor and transducer modules.
+            Every module includes operating physics, pinout specifications, recommended voltage
+            rails, live telemetry simulations, verified Arduino C++ drivers, and real hardware bench captures.
           </p>
 
-          <div className="sensors-hero-actions">
-            <button className="btn btn-primary" onClick={() => setGuideOpen(true)}>
-              <FolderOpen size={18} /> Upload Your 10 Sensor Photos Guide
-            </button>
-            <span className="sensors-count-tag">
-              <Cpu size={16} /> 22 Sensor Modules Documented
+          <div className="repo-source-badge-row">
+            <span className="repo-storage-tag">
+              <ShieldCheck size={14} color="#10b981" />
+              <span>Verified Hardware Lab Archive • 22 Sensor Modules</span>
             </span>
           </div>
         </div>
@@ -199,19 +174,14 @@ export const SensorsLab: React.FC = () => {
       <div className="sensors-grid">
         <AnimatePresence mode="popLayout">
           {filteredSensors.map((sensor, idx) => {
-            // Determine active photos list
-            const customPhotos = customMedia[sensor.id]?.photos || [];
-            const hasMultiplePhotos =
-              customPhotos.length > 1 || Boolean(sensor.userUploadedFilename2) || Boolean(sensor.recommendedPhoto2);
-            const totalPhotos = customPhotos.length > 0 ? customPhotos.length : (hasMultiplePhotos ? 2 : 1);
+            // Check real photos
+            const sensorPhotos = sensor.photos || [];
+            const hasRealPhotos = sensorPhotos.length > 0;
+            const resolvedPhotos = sensorPhotos.map((p) => resolveMediaPath(p));
+            const totalPhotos = resolvedPhotos.length;
+            const hasMultiplePhotos = totalPhotos > 1;
             const activePhotoIdx = (cardPhotoIndexes[sensor.id] || 0) % (totalPhotos || 1);
-
-            const activeCustomMedia = customPhotos[activePhotoIdx];
-            const rawPhoto =
-              activePhotoIdx === 0
-                ? (sensor.userUploadedFilename1 ? `media/sensors/${sensor.userUploadedFilename1}` : sensor.recommendedPhoto)
-                : (sensor.userUploadedFilename2 ? `media/sensors/${sensor.userUploadedFilename2}` : sensor.recommendedPhoto2 || sensor.recommendedPhoto);
-            const defaultPhotoUrl = resolveMediaPath(rawPhoto);
+            const currentPhotoUrl = resolvedPhotos[activePhotoIdx];
 
             return (
               <motion.div
@@ -234,59 +204,78 @@ export const SensorsLab: React.FC = () => {
                   </div>
 
                   {/* Media Preview Window */}
-                  <div
-                    className="sensor-card-media-preview"
-                    onClick={() => setActiveSensor(sensor)}
-                  >
-                    {activeCustomMedia ? (
-                      activeCustomMedia.type === 'video' ? (
-                        <video src={activeCustomMedia.url} autoPlay muted loop className="preview-thumb" />
-                      ) : (
-                        <img src={activeCustomMedia.url} alt={sensor.name} className="preview-thumb" />
-                      )
+                  <div className="sensor-card-media-preview">
+                    {hasRealPhotos ? (
+                      <div className="sensor-photo-container">
+                        <img
+                          src={currentPhotoUrl}
+                          alt={`${sensor.name} - hardware capture`}
+                          className="preview-thumb"
+                          loading="lazy"
+                          onError={(e) => {
+                            // If an image fails to load, gracefully hide and show schematic fallback
+                            (e.target as HTMLElement).style.display = 'none';
+                            const parent = (e.target as HTMLElement).parentElement;
+                            if (parent) {
+                              const fallback = parent.querySelector('.photo-schematic-fallback');
+                              if (fallback) (fallback as HTMLElement).style.display = 'block';
+                            }
+                          }}
+                        />
+
+                        {/* Interactive Zoom Overlay */}
+                        <div
+                          className="preview-zoom-overlay"
+                          onClick={(e) => openLightbox(sensor, activePhotoIdx, e)}
+                          title="Click to inspect in Full HD Lightbox"
+                        >
+                          <span className="zoom-overlay-chip">
+                            <ZoomIn size={14} /> Inspect Full HD
+                          </span>
+                        </div>
+
+                        {/* Hidden Schematic Fallback in case of asset 404 */}
+                        <div className="photo-schematic-fallback" style={{ display: 'none', width: '100%', height: '100%' }}>
+                          <SensorSchematicGraphic
+                            sensorId={sensor.id}
+                            name={sensor.name}
+                            model={sensor.model}
+                            category={sensor.category}
+                            voltage={sensor.voltage}
+                            interfaceType={sensor.interfaceType}
+                            pins={sensor.pins}
+                          />
+                        </div>
+                      </div>
                     ) : (
-                      <img
-                        src={defaultPhotoUrl}
-                        alt={sensor.name}
-                        className="preview-thumb"
-                        onError={(e) => {
-                          (e.target as HTMLElement).style.display = 'none';
-                          const parent = (e.target as HTMLElement).parentElement;
-                          if (parent) {
-                            const placeholder = parent.querySelector('.preview-placeholder-graphic');
-                            if (placeholder) (placeholder as HTMLElement).style.display = 'flex';
-                          }
-                        }}
+                      // Clean vector schematic blueprint for sensors awaiting hardware capture
+                      <SensorSchematicGraphic
+                        sensorId={sensor.id}
+                        name={sensor.name}
+                        model={sensor.model}
+                        category={sensor.category}
+                        voltage={sensor.voltage}
+                        interfaceType={sensor.interfaceType}
+                        pins={sensor.pins}
                       />
                     )}
 
-                    {/* Fallback Graphic */}
-                    <div
-                      className="preview-placeholder-graphic"
-                      style={{ display: activeCustomMedia ? 'none' : 'flex' }}
-                    >
-                      <Cpu size={36} className="circuit-icon" />
-                      <span className="preview-hint">
-                        {sensor.userUploadedFilename1 ? `Ready for: ${sensor.userUploadedFilename1}` : 'Click to inspect & attach photo'}
-                      </span>
-                    </div>
-
                     {/* Multiple Photos Switcher Pills */}
                     {hasMultiplePhotos && (
-                      <div
+                      <button
                         className="card-gallery-pill-btn"
                         onClick={(e) => toggleCardPhoto(sensor.id, totalPhotos, e)}
-                        title="Click to view other photo"
+                        title="Click to toggle alternate angle"
                       >
-                        <FileImage size={11} /> Photo {activePhotoIdx + 1}/{totalPhotos} (Click to Flip)
-                      </div>
+                        <FileImage size={11} /> Angle {activePhotoIdx + 1}/{totalPhotos} (Flip)
+                      </button>
                     )}
 
-                    {/* User Filename Label */}
-                    {sensor.userUploadedFilename1 && (
+                    {/* Hardware Capture Label */}
+                    {hasRealPhotos && (
                       <span className="attached-indicator-pill">
                         <CheckCircle2 size={11} color="#10b981" />
-                        {activePhotoIdx === 0 ? sensor.userUploadedFilename1 : sensor.userUploadedFilename2 || sensor.userUploadedFilename1}
+                        Hardware Capture
                       </span>
                     )}
                   </div>
@@ -311,33 +300,30 @@ export const SensorsLab: React.FC = () => {
                       <Sliders size={12} /> {sensor.pins.length} Pins
                     </span>
                     {hasMultiplePhotos && (
-                      <span className="chip" style={{ color: '#00f2fe' }}>
-                        <FileImage size={12} /> 2 Photos Support
+                      <span className="chip highlight-chip">
+                        <FileImage size={12} /> {totalPhotos} Real Photos
                       </span>
                     )}
                   </div>
 
-                  {/* Card Actions */}
+                  {/* Card Actions (Pure Read-Only Inspection - No uploads!) */}
                   <div className="sensor-card-actions">
                     <button
                       className="btn btn-secondary sensor-inspect-btn"
                       onClick={() => setActiveSensor(sensor)}
                     >
-                      Inspect Specs & 2-Photo Gallery <ArrowRight size={16} />
+                      Inspect Specs & Driver <ArrowRight size={16} />
                     </button>
 
-                    <label
-                      className="icon-btn upload-icon-btn"
-                      title={`Upload photo for ${sensor.name} (${activePhotoIdx === 0 ? 'Photo 1' : 'Photo 2'})`}
-                    >
-                      <Upload size={16} />
-                      <input
-                        type="file"
-                        accept="image/*,video/*"
-                        style={{ display: 'none' }}
-                        onChange={(e) => handleCardFileUpload(sensor.id, activePhotoIdx, e)}
-                      />
-                    </label>
+                    {hasRealPhotos && (
+                      <button
+                        className="icon-btn hd-inspect-btn"
+                        title="Inspect full resolution hardware photo"
+                        onClick={(e) => openLightbox(sensor, activePhotoIdx, e)}
+                      >
+                        <Maximize2 size={15} />
+                      </button>
+                    )}
                   </div>
                 </TiltCard>
               </motion.div>
@@ -348,33 +334,38 @@ export const SensorsLab: React.FC = () => {
 
       {filteredSensors.length === 0 && (
         <div className="sensors-empty-state">
-          <p>No sensors match your query "{searchQuery}".</p>
-          <button
-            className="btn btn-secondary"
-            onClick={() => {
-              setSearchQuery('');
-              setSelectedCategory('all');
-            }}
-          >
-            Reset Filters
+          <Cpu size={48} className="empty-icon" />
+          <h3>No sensor modules match &ldquo;{searchQuery}&rdquo;</h3>
+          <p>Try searching for other terms like DHT11, Tilt, Hall, Ultrasonic, IR, or Soil Moisture.</p>
+          <button className="btn btn-secondary" onClick={() => setSearchQuery('')}>
+            Reset Search
           </button>
         </div>
       )}
 
-      {/* Sensor Detail Inspector Modal (with 2-photo gallery support) */}
-      <SensorDetailModal
-        sensor={activeSensor}
-        onClose={() => setActiveSensor(null)}
-        customMediaList={activeSensor ? customMedia[activeSensor.id]?.photos || [] : []}
-        onAttachMedia={handleAttachMedia}
-      />
+      {/* Sensor Detail Modal (Read-Only Specs & Interactive Simulator) */}
+      {activeSensor && (
+        <SensorDetailModal
+          sensor={activeSensor}
+          onClose={() => setActiveSensor(null)}
+          onOpenLightbox={(photoIdx) => openLightbox(activeSensor, photoIdx)}
+        />
+      )}
 
-      {/* Guide Modal */}
-      <SensorGuideModal
-        isOpen={guideOpen}
-        onClose={() => setGuideOpen(false)}
-        onMediaUploaded={handleAttachMedia}
-      />
+      {/* Media Architecture Guide Modal */}
+      {guideOpen && <SensorGuideModal onClose={() => setGuideOpen(false)} />}
+
+      {/* Full HD Photo Lightbox / Inspector */}
+      {lightboxSensor && (
+        <PhotoLightbox
+          isOpen={Boolean(lightboxSensor)}
+          onClose={() => setLightboxSensor(null)}
+          sensorName={lightboxSensor.name}
+          sensorModel={lightboxSensor.model}
+          photos={(lightboxSensor.photos || []).map((p) => resolveMediaPath(p))}
+          initialIndex={lightboxInitialIdx}
+        />
+      )}
     </div>
   );
 };
