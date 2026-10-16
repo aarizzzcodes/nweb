@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { GithubIcon } from './Icons';
 import { TiltCard } from './TiltCard';
 import { ScrollReveal } from './ScrollReveal';
-import { SensorsLab } from './SensorsLab';
 import { Project, ProjectCategory } from '../types';
 
 const PROJECTS: Project[] = [
@@ -101,32 +100,27 @@ export const Projects: React.FC = () => {
         </button>
       </ScrollReveal>
 
-      {/* When Sensors subpart is selected */}
-      {activeFilter === 'sensors' ? (
-        <SensorsLab />
-      ) : (
-        <>
-          {/* Spotlight banner inside Projects linking to the Sensors Workbench */}
-          <div className="sensor-spotlight-banner">
-            <div className="spotlight-left">
-              <span className="spotlight-badge">
-                <Sparkles size={14} /> Hardware Workbench Subpart
-              </span>
-              <h3>Physical Computing & 22-Sensor Laboratory</h3>
-              <p>
-                Worked with 22 distinct microcontrollers and analog/digital sensors including Ultrasonic, Barometric BMP280, PIR Motion, Soil Moisture, Laser, and Hall sensors.
-              </p>
-            </div>
-            <button
-              className="btn btn-primary spotlight-cta-btn"
-              onClick={() => setActiveFilter('sensors')}
-            >
-              Enter Sensors Lab <ArrowRight size={18} />
-            </button>
-          </div>
+      {/* Spotlight banner inside Projects linking to the Sensors Workbench */}
+      <div className="sensor-spotlight-banner">
+        <div className="spotlight-left">
+          <span className="spotlight-badge">
+            <Sparkles size={14} /> Hardware Workbench Subpart
+          </span>
+          <h3>Physical Computing & 22-Sensor Laboratory</h3>
+          <p>
+            Worked with 22 distinct microcontrollers and analog/digital sensors including Ultrasonic, Barometric BMP280, PIR Motion, Soil Moisture, Laser, and Hall sensors.
+          </p>
+        </div>
+        <a
+          href="#sensors-lab"
+          className="btn btn-primary spotlight-cta-btn"
+        >
+          Enter Sensors Lab <ArrowRight size={18} />
+        </a>
+      </div>
 
-          <motion.div layout className="projects-grid">
-            <AnimatePresence mode="popLayout">
+      <motion.div layout className="projects-grid">
+        <AnimatePresence mode="popLayout">
               {filteredProjects.map((project, idx) => (
                 <motion.div
                   layout
@@ -197,21 +191,19 @@ export const Projects: React.FC = () => {
                     </div>
 
                     {project.id === 'sensors-lab-project' && (
-                      <button
+                      <a
+                        href="#sensors-lab"
                         className="btn btn-secondary"
                         style={{ marginTop: '1rem', width: '100%', justifyContent: 'center' }}
-                        onClick={() => setActiveFilter('sensors')}
                       >
                         Explore All 22 Sensors & Pinouts <ArrowRight size={16} />
-                      </button>
+                      </a>
                     )}
                   </TiltCard>
                 </motion.div>
               ))}
             </AnimatePresence>
           </motion.div>
-        </>
-      )}
     </section>
   );
 };

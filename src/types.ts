@@ -70,6 +70,34 @@ export interface Milestone {
   description: string;
 }
 
+export type ColorMode = 'dark' | 'light';
+
+export interface ThemeColors {
+  previewColor: string;
+  accentCyan: string;
+  accentViolet: string;
+  accentEmerald: string;
+  accentGradient: string;
+  bgDeep: string;
+  bgSurface: string;
+  bgCard: string;
+  borderSubtle: string;
+  borderGlow: string;
+  textMain: string;
+  textMuted: string;
+  textDim: string;
+  // 3D atmosphere colors
+  threeFog: number;
+  threeParticlePrimary: string;
+  threeParticleSecondary: string;
+  // 3D Orb colors
+  orbColor: string;
+  orbKeyLight: string;
+  orbRimLight: string;
+  orbFillLight: string;
+  orbAmbientLight: string;
+}
+
 export type ThemeId =
   | 'cyan'       // Cyber Cyan (Original default)
   | 'emerald'    // Matrix / Emerald Green
@@ -83,6 +111,8 @@ export interface ThemeConfig {
   name: string;
   tagline: string;
   previewColor: string;
+  dark: ThemeColors;
+  light: ThemeColors;
   accentCyan: string;
   accentViolet: string;
   accentEmerald: string;

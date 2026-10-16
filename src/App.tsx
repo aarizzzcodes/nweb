@@ -14,12 +14,14 @@ import { FloatingBackToTop } from './components/FloatingBackToTop';
 import { IntroSequence } from './components/IntroSequence';
 import { useLenisScroll } from './hooks/useLenisScroll';
 import { THEMES, applyThemeToCSS } from './utils/theme';
-import { BackgroundAnimationMode, ThemeId } from './types';
+import { BackgroundAnimationMode, ThemeId, ColorMode } from './types';
+import { SectionDivider } from './components/SectionDivider';
+import { SensorPhotoGallery } from './components/SensorPhotoGallery';
+import { SensorsLab } from './components/SensorsLab';
 
 const THEME_STORAGE_KEY = 'aariz_portfolio_theme';
 const ANIM_STORAGE_KEY = 'aariz_portfolio_animation';
-
-import { SectionDivider } from './components/SectionDivider';
+const COLOR_MODE_STORAGE_KEY = 'aariz_portfolio_color_mode';
 
 export const App: React.FC = () => {
   // Smooth inertia scrolling via Lenis (matching 0:13 - 0:25 reference video behavior)
@@ -42,6 +44,16 @@ export const App: React.FC = () => {
     }
   });
 
+  // Dark vs Light color mode state with localStorage memory
+  const [colorMode, setColorMode] = useState<ColorMode>(() => {
+    try {
+      const saved = localStorage.getItem(COLOR_MODE_STORAGE_KEY) as ColorMode;
+      return saved === 'light' || saved === 'dark' ? saved : 'dark';
+    } catch {
+      return 'dark';
+    }
+  });
+
   // Background animation mode state with localStorage memory (default 'circuit' for 3D Holographic Quantum Core wow factor)
   const [currentAnimation, setCurrentAnimation] = useState<BackgroundAnimationMode>(() => {
     try {
@@ -52,13 +64,20 @@ export const App: React.FC = () => {
     }
   });
 
-  // Sync theme variables into root CSS
+  // Sync theme variables and color mode into root CSS
   useEffect(() => {
-    applyThemeToCSS(THEMES[currentTheme]);
+    applyThemeToCSS(THEMES[currentTheme], colorMode);
     try {
       localStorage.setItem(THEME_STORAGE_KEY, currentTheme);
     } catch {}
-  }, [currentTheme]);
+  }, [currentTheme, colorMode]);
+
+  // Sync color mode to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem(COLOR_MODE_STORAGE_KEY, colorMode);
+    } catch {}
+  }, [colorMode]);
 
   // Sync animation mode to localStorage
   useEffect(() => {
@@ -103,6 +122,22 @@ export const App: React.FC = () => {
     }, 50);
   }, []);
 
+  const handleToggleColorMode = useCallback(() => {
+    setColorMode((prev) => {
+      const next = prev === 'dark' ? 'light' : 'dark';
+      showToast(`Switched to ${next === 'dark' ? 'Dark Obsidian' : 'Light Platinum'} mode`);
+      return next;
+    });
+  }, [showToast]);
+
+  const handleSelectColorMode = useCallback((mode: ColorMode) => {
+    setColorMode(mode);
+    showToast(`Switched to ${mode === 'dark' ? 'Dark Obsidian' : 'Light Platinum'} mode`);
+  }, [showToast]);
+
+  const activeTheme = THEMES[currentTheme];
+  const activeThemeColors = activeTheme[colorMode] || activeTheme.dark;
+
   return (
     <>
       {/* 1. Fullscreen Typewriter Intro Sequence (0:02 - 0:05 in reference video) */}
@@ -116,7 +151,8 @@ export const App: React.FC = () => {
       {/* 3D WebGL Background Animation with High-Impact Wow Factor */}
       <ThreeBackground
         mode={currentAnimation}
-        theme={THEMES[currentTheme]}
+        theme={activeTheme}
+        colorMode={colorMode}
       />
 
       {/* Navigation Bar with Theme & Background Switcher + Replay Intro */}
@@ -132,14 +168,19 @@ export const App: React.FC = () => {
           showToast(`3D Background: ${a}`);
         }}
         onReplayIntro={handleReplayIntro}
+        colorMode={colorMode}
+        onToggleColorMode={handleToggleColorMode}
+        onSelectColorMode={handleSelectColorMode}
       />
 
       {/* Main Content Container with Smooth Scroll Flow */}
       <main>
-        {/* 2 & 3. Hero Reveal with Matrix Text Scramble & 3D Organic Amber Orb */}
+        {/* 2 & 3. Hero Reveal with Matrix Text Scramble & 3D Organic Orb */}
         <Hero
           onCopyEmail={handleCopyEmail}
           introFinished={introFinished}
+          colorMode={colorMode}
+          themeColors={activeThemeColors}
         />
         <SectionDivider />
         <About />
@@ -147,6 +188,12 @@ export const App: React.FC = () => {
         <Skills />
         <SectionDivider />
         <Projects />
+        <SectionDivider />
+        <SensorPhotoGallery />
+        <SectionDivider />
+        <section id="sensors-lab" className="section-container" style={{ padding: '0 1rem' }}>
+          <SensorsLab />
+        </section>
         <SectionDivider />
         <Timeline />
         <SectionDivider />

@@ -7,8 +7,12 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 3000,
+    watch: {
+      ignored: ['**/assets/**', '**/dist/**', '**/.git/**'],
+    },
   },
   build: {
+    chunkSizeWarningLimit: 2500,
     rollupOptions: {
       output: {
         entryFileNames: 'assets/index.js',

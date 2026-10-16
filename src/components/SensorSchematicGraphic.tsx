@@ -142,9 +142,9 @@ export const SensorSchematicGraphic: React.FC<SensorSchematicGraphicProps> = ({
             flexWrap: 'wrap',
           }}
         >
-          {pins.map((pin) => (
+          {pins.map((pin, pIdx) => (
             <div
-              key={pin.name}
+              key={`${pin.name}-${pIdx}`}
               style={{
                 display: 'flex',
                 flexDirection: 'column',

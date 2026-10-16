@@ -1,10 +1,11 @@
 import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
-import { BackgroundAnimationMode, ThemeConfig } from '../types';
+import { BackgroundAnimationMode, ThemeConfig, ColorMode } from '../types';
 
 interface ThreeBackgroundProps {
   mode: BackgroundAnimationMode;
   theme: ThemeConfig;
+  colorMode?: ColorMode;
 }
 
 interface TrailParticle {
@@ -20,7 +21,7 @@ interface TrailParticle {
   hueShift: number;
 }
 
-export const ThreeBackground: React.FC<ThreeBackgroundProps> = ({ mode, theme }) => {
+export const ThreeBackground: React.FC<ThreeBackgroundProps> = ({ mode, theme, colorMode = 'dark' }) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -31,9 +32,12 @@ export const ThreeBackground: React.FC<ThreeBackgroundProps> = ({ mode, theme })
     let width = window.innerWidth;
     let height = window.innerHeight;
 
+    const resolved = theme[colorMode] || theme.dark;
+    const isLight = colorMode === 'light';
+
     // --- Scene, Camera, Renderer ---
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x06090e, 0.0016);
+    scene.fog = new THREE.FogExp2(resolved.threeFog, isLight ? 0.0012 : 0.0016);
 
     const camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 1600);
     camera.position.z = 240;
@@ -45,8 +49,9 @@ export const ThreeBackground: React.FC<ThreeBackgroundProps> = ({ mode, theme })
     });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(width, height);
-    renderer.setClearColor(0x000000, 0); // Transparent for sleek dark background
-    container.innerHTML = '';
+    while (container.firstChild) {
+      container.removeChild(container.firstChild);
+    }
     container.appendChild(renderer.domElement);
 
     // --- Procedural Glowing Particle Texture ---
@@ -56,11 +61,20 @@ export const ThreeBackground: React.FC<ThreeBackgroundProps> = ({ mode, theme })
       pCanvas.height = 64;
       const pCtx = pCanvas.getContext('2d')!;
       const grad = pCtx.createRadialGradient(32, 32, 0, 32, 32, 32);
-      grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
-      grad.addColorStop(0.18, 'rgba(255, 255, 255, 0.85)');
-      grad.addColorStop(0.45, 'rgba(255, 255, 255, 0.35)');
-      grad.addColorStop(0.75, 'rgba(255, 255, 255, 0.08)');
-      grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+      if (isLight) {
+        // High-contrast clean crystalline particle texture for light atmosphere
+        grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
+        grad.addColorStop(0.25, 'rgba(240, 246, 255, 0.95)');
+        grad.addColorStop(0.6, 'rgba(210, 230, 255, 0.5)');
+        grad.addColorStop(0.85, 'rgba(180, 210, 255, 0.15)');
+        grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+      } else {
+        grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
+        grad.addColorStop(0.18, 'rgba(255, 255, 255, 0.85)');
+        grad.addColorStop(0.45, 'rgba(255, 255, 255, 0.35)');
+        grad.addColorStop(0.75, 'rgba(255, 255, 255, 0.08)');
+        grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+      }
       pCtx.fillStyle = grad;
       pCtx.fillRect(0, 0, 64, 64);
       return new THREE.CanvasTexture(pCanvas);
@@ -68,19 +82,19 @@ export const ThreeBackground: React.FC<ThreeBackgroundProps> = ({ mode, theme })
 
     const particleTexture = createParticleTexture();
 
-    // --- Theme Color Parsing ---
-    const themeColor = new THREE.Color(theme.previewColor);
-    const accentSecondary = new THREE.Color(theme.accentEmerald || '#3b82f6');
+    // --- Theme Color Parsing for 3D Atmosphere ---
+    const themeColor = new THREE.Color(resolved.threeParticlePrimary);
+    const accentSecondary = new THREE.Color(resolved.threeParticleSecondary);
 
     // --- Lighting ---
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.45);
+    const ambientLight = new THREE.AmbientLight(0xffffff, isLight ? 0.75 : 0.45);
     scene.add(ambientLight);
 
-    const pointLight = new THREE.PointLight(themeColor, 3.2, 450);
+    const pointLight = new THREE.PointLight(themeColor, isLight ? 4.2 : 3.2, 500);
     pointLight.position.set(0, 0, 110);
     scene.add(pointLight);
 
-    const secondaryLight = new THREE.PointLight(accentSecondary, 2.2, 450);
+    const secondaryLight = new THREE.PointLight(accentSecondary, isLight ? 3.0 : 2.2, 500);
     secondaryLight.position.set(-160, 130, -40);
     scene.add(secondaryLight);
 
@@ -106,12 +120,12 @@ export const ThreeBackground: React.FC<ThreeBackgroundProps> = ({ mode, theme })
 
     const starMaterial = new THREE.PointsMaterial({
       color: themeColor,
-      size: 3.2,
+      size: isLight ? 3.8 : 3.2,
       map: particleTexture,
       transparent: true,
-      blending: THREE.AdditiveBlending,
+      blending: isLight ? THREE.NormalBlending : THREE.AdditiveBlending,
       depthWrite: false,
-      opacity: 0.8,
+      opacity: isLight ? 0.7 : 0.8,
     });
     const starPoints = new THREE.Points(starGeometry, starMaterial);
     rootGroup.add(starPoints);
@@ -124,8 +138,8 @@ export const ThreeBackground: React.FC<ThreeBackgroundProps> = ({ mode, theme })
     const warpStreakMat = new THREE.LineBasicMaterial({
       color: themeColor,
       transparent: true,
-      opacity: 0.4,
-      blending: THREE.AdditiveBlending,
+      opacity: isLight ? 0.6 : 0.4,
+      blending: isLight ? THREE.NormalBlending : THREE.AdditiveBlending,
     });
     const warpStreaks = new THREE.LineSegments(warpStreakGeo, warpStreakMat);
     warpStreaks.visible = mode === 'warp';
@@ -195,7 +209,7 @@ export const ThreeBackground: React.FC<ThreeBackgroundProps> = ({ mode, theme })
     // Outer orbital telemetry satellite nodes
     const nodeCount = 12;
     const nodeGeometry = new THREE.SphereGeometry(1.6, 10, 10);
-    const nodeMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    const nodeMaterial = new THREE.MeshBasicMaterial({ color: isLight ? 0x1e293b : 0xffffff });
     const nodesGroup = new THREE.Group();
     for (let n = 0; n < nodeCount; n++) {
       const node = new THREE.Mesh(nodeGeometry, nodeMaterial);
@@ -224,7 +238,7 @@ export const ThreeBackground: React.FC<ThreeBackgroundProps> = ({ mode, theme })
       size: 5.5,
       map: particleTexture,
       transparent: true,
-      blending: THREE.AdditiveBlending,
+      blending: isLight ? THREE.NormalBlending : THREE.AdditiveBlending,
       depthWrite: false,
       vertexColors: true,
     });
@@ -269,7 +283,7 @@ export const ThreeBackground: React.FC<ThreeBackgroundProps> = ({ mode, theme })
       size: 7.0,
       map: particleTexture,
       transparent: true,
-      blending: THREE.AdditiveBlending,
+      blending: isLight ? THREE.NormalBlending : THREE.AdditiveBlending,
       depthWrite: false,
       vertexColors: true,
     });
@@ -328,10 +342,10 @@ export const ThreeBackground: React.FC<ThreeBackgroundProps> = ({ mode, theme })
     // =========================================================================
     // 5. 3D CYBER GRID (Perspective Horizon Grid)
     // =========================================================================
-    const gridHelper = new THREE.GridHelper(840, 32, themeColor, new THREE.Color(0x131d2a));
+    const gridHelper = new THREE.GridHelper(840, 32, themeColor, new THREE.Color(isLight ? 0xd0dbe5 : 0x131d2a));
     gridHelper.position.y = -95;
     (gridHelper.material as THREE.Material).transparent = true;
-    (gridHelper.material as THREE.Material).opacity = 0.35;
+    (gridHelper.material as THREE.Material).opacity = isLight ? 0.28 : 0.35;
     rootGroup.add(gridHelper);
 
     // Mode Adjustments
@@ -361,12 +375,13 @@ export const ThreeBackground: React.FC<ThreeBackgroundProps> = ({ mode, theme })
     // =========================================================================
     // 6. 60FPS ANIMATION LOOP WITH DYNAMIC PARTICLE PHYSICS
     // =========================================================================
-    const clock = new THREE.Clock();
+    const startTime = performance.now();
 
-    const animate = () => {
+    const animate = (timestamp?: number) => {
       animationFrameId = requestAnimationFrame(animate);
 
-      const elapsedTime = clock.getElapsedTime();
+      const currentTime = timestamp || performance.now();
+      const elapsedTime = (currentTime - startTime) * 0.001;
 
       // Smooth mouse camera parallax
       mouseDamped.x += (mouseDamped.targetX - mouseDamped.x) * 0.05;
@@ -536,7 +551,7 @@ export const ThreeBackground: React.FC<ThreeBackgroundProps> = ({ mode, theme })
       renderer.render(scene, camera);
     };
 
-    animate();
+    animate(performance.now());
 
     // =========================================================================
     // 7. RESIZE HANDLER & SYSTEM CLEANUP
@@ -576,7 +591,7 @@ export const ThreeBackground: React.FC<ThreeBackgroundProps> = ({ mode, theme })
       ringGeometries.forEach((g) => g.dispose());
       ringMaterials.forEach((m) => m.dispose());
 
-      if (container.contains(renderer.domElement)) {
+      if (renderer.domElement && renderer.domElement.parentElement === container) {
         container.removeChild(renderer.domElement);
       }
     };

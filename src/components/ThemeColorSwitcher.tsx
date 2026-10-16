@@ -10,16 +10,20 @@ import {
   X,
   Box,
   Radio,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { THEMES } from '../utils/theme';
-import { BackgroundAnimationMode, ThemeId } from '../types';
+import { BackgroundAnimationMode, ThemeId, ColorMode } from '../types';
 
 interface ThemeColorSwitcherProps {
   currentTheme: ThemeId;
   onSelectTheme: (id: ThemeId) => void;
   currentAnimation: BackgroundAnimationMode;
   onSelectAnimation: (mode: BackgroundAnimationMode) => void;
+  colorMode?: ColorMode;
+  onSelectColorMode?: (mode: ColorMode) => void;
 }
 
 export const ThemeColorSwitcher: React.FC<ThemeColorSwitcherProps> = ({
@@ -27,6 +31,8 @@ export const ThemeColorSwitcher: React.FC<ThemeColorSwitcherProps> = ({
   onSelectTheme,
   currentAnimation,
   onSelectAnimation,
+  colorMode = 'dark',
+  onSelectColorMode,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -105,9 +111,36 @@ export const ThemeColorSwitcher: React.FC<ThemeColorSwitcherProps> = ({
                 </button>
               </div>
 
+              {/* Atmosphere Mode: Dark vs Light */}
+              {onSelectColorMode && (
+                <div className="theme-section">
+                  <label className="theme-section-label">Atmosphere Mode</label>
+                  <div className="color-mode-toggle-grid">
+                    <button
+                      className={`color-mode-pill ${colorMode === 'dark' ? 'active' : ''}`}
+                      onClick={() => onSelectColorMode('dark')}
+                      type="button"
+                    >
+                      <Moon size={15} />
+                      <span>Dark Obsidian</span>
+                      {colorMode === 'dark' && <Check size={12} className="check-icon" />}
+                    </button>
+                    <button
+                      className={`color-mode-pill ${colorMode === 'light' ? 'active' : ''}`}
+                      onClick={() => onSelectColorMode('light')}
+                      type="button"
+                    >
+                      <Sun size={15} />
+                      <span>Light Platinum</span>
+                      {colorMode === 'light' && <Check size={12} className="check-icon" />}
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Theme Colors Grid */}
               <div className="theme-section">
-                <label className="theme-section-label">Cybernetic Color Palette</label>
+                <label className="theme-section-label">Theme Color Accent</label>
                 <div className="themes-palette-grid">
                   {themesList.map((t) => {
                     const isSelected = t.id === currentTheme;

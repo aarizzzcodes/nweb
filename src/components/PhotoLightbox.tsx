@@ -142,7 +142,7 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
                   const thumbName = decodeURIComponent(p.split('/').pop() || `Photo ${idx + 1}`);
                   return (
                     <button
-                      key={p}
+                      key={`${p}-${idx}`}
                       className={`lightbox-thumb-btn ${idx === currentIndex ? 'active' : ''}`}
                       onClick={() => {
                         setCurrentIndex(idx);

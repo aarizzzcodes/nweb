@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, X, Cpu, Sparkles, ArrowRight, Mail } from 'lucide-react';
+import { Menu, X, Cpu, Sparkles, ArrowRight, Mail, Sun, Moon, Camera } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ThemeColorSwitcher } from './ThemeColorSwitcher';
 import { GithubIcon, LinkedinIcon } from './Icons';
-import { BackgroundAnimationMode, ThemeId } from '../types';
+import { BackgroundAnimationMode, ThemeId, ColorMode } from '../types';
 
 interface NavbarProps {
   currentTheme: ThemeId;
@@ -11,6 +11,9 @@ interface NavbarProps {
   currentAnimation: BackgroundAnimationMode;
   onSelectAnimation: (mode: BackgroundAnimationMode) => void;
   onReplayIntro?: () => void;
+  colorMode?: ColorMode;
+  onToggleColorMode?: () => void;
+  onSelectColorMode?: (mode: ColorMode) => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -19,6 +22,9 @@ export const Navbar: React.FC<NavbarProps> = ({
   currentAnimation,
   onSelectAnimation,
   onReplayIntro,
+  colorMode = 'dark',
+  onToggleColorMode,
+  onSelectColorMode,
 }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -54,9 +60,10 @@ export const Navbar: React.FC<NavbarProps> = ({
     { href: '#about', label: 'About', num: '01' },
     { href: '#skills', label: 'Skills', num: '02' },
     { href: '#projects', label: 'Projects', num: '03' },
-    { href: '#sensors-lab', label: 'Sensors Lab', num: '04', badge: '22' },
-    { href: '#timeline', label: 'Milestones', num: '05' },
-    { href: '#contact', label: 'Contact', num: '06', cta: true },
+    { href: '#gallery', label: 'Gallery', num: '04', badge: '11' },
+    { href: '#sensors-lab', label: 'Sensors Lab', num: '05', badge: '22' },
+    { href: '#timeline', label: 'Milestones', num: '06' },
+    { href: '#contact', label: 'Contact', num: '07', cta: true },
   ];
 
   return (
@@ -72,12 +79,27 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Center / Right Toolbar Controls */}
           <div className="nav-actions-group">
+            {/* Quick Dark/Light Mode Toggle */}
+            {onToggleColorMode && (
+              <button
+                className="color-mode-nav-btn"
+                onClick={onToggleColorMode}
+                title={colorMode === 'dark' ? 'Switch to Light Platinum Theme' : 'Switch to Dark Obsidian Theme'}
+                aria-label="Toggle Color Theme Mode"
+              >
+                {colorMode === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
+                <span className="color-mode-nav-text">{colorMode === 'dark' ? 'Light' : 'Dark'}</span>
+              </button>
+            )}
+
             {/* Theme & 3D Background Animation Switcher */}
             <ThemeColorSwitcher
               currentTheme={currentTheme}
               onSelectTheme={onSelectTheme}
               currentAnimation={currentAnimation}
               onSelectAnimation={onSelectAnimation}
+              colorMode={colorMode}
+              onSelectColorMode={onSelectColorMode}
             />
 
             {onReplayIntro && (
@@ -209,6 +231,19 @@ export const Navbar: React.FC<NavbarProps> = ({
 
               {/* Drawer Bottom Actions & Socials */}
               <div className="mobile-drawer-footer">
+                {onToggleColorMode && (
+                  <button
+                    className="mobile-drawer-color-mode-btn"
+                    onClick={() => {
+                      onToggleColorMode();
+                    }}
+                    aria-label="Toggle Dark and Light Mode"
+                  >
+                    {colorMode === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+                    <span>Theme Atmosphere: {colorMode === 'dark' ? 'Dark Obsidian' : 'Light Platinum'}</span>
+                  </button>
+                )}
+
                 {onReplayIntro && (
                   <button
                     className="mobile-drawer-intro-replay"

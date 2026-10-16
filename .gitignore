@@ -20,8 +20,8 @@ coverage
 # Dependency directories
 node_modules/
 
-# Production build output
-dist/
+# Production build output (allow dist/ for GitHub Pages publishing)
+# dist/
 dist-ssr/
 *.local
 

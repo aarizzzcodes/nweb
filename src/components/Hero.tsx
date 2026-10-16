@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { GithubIcon, LinkedinIcon } from './Icons';
 import { OrganicAmberOrb } from './OrganicAmberOrb';
 import { useTextScramble } from '../hooks/useTextScramble';
+import { ColorMode, ThemeColors } from '../types';
 
 /**
  * =========================================================================
@@ -38,11 +39,15 @@ interface HeroProps {
   onCopyEmail: (email: string) => void;
   // Triggered when the intro sequence upward wipe starts revealing the page
   introFinished?: boolean;
+  colorMode?: ColorMode;
+  themeColors?: ThemeColors;
 }
 
 export const Hero: React.FC<HeroProps> = ({
   onCopyEmail,
   introFinished = true,
+  colorMode = 'dark',
+  themeColors,
 }) => {
   // Scramble hooks for Line 1 and Line 2
   const {
@@ -78,8 +83,12 @@ export const Hero: React.FC<HeroProps> = ({
 
   return (
     <section className="hero-reference-container" id="hero">
-      {/* 3D Organic Amber Orb with Inner Cavity sits directly behind the headline */}
-      <OrganicAmberOrb className="hero-orb-backdrop" />
+      {/* 3D Organic Orb with Inner Cavity sits directly behind the headline */}
+      <OrganicAmberOrb
+        className="hero-orb-backdrop"
+        colorMode={colorMode}
+        themeColors={themeColors}
+      />
 
       {/* Hero Foreground Content */}
       <div className="hero-reference-content">

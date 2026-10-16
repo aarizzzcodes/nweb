@@ -144,8 +144,17 @@ export const DotMatrixBrand: React.FC<DotMatrixBrandProps> = ({
         ctx.beginPath();
         ctx.arc(d.x, d.y, r, 0, Math.PI * 2);
 
-        // Muted slate tone: rgba(226, 232, 240, opacity) - clean, low-contrast architectural watermark
-        ctx.fillStyle = `rgba(226, 232, 240, ${Math.min(0.25, opacity * d.originalAlpha)})`;
+        // Check current color mode
+        const isLight = document.documentElement.getAttribute('data-color-mode') === 'light';
+
+        // Muted low-contrast tone:
+        // Dark mode: rgba(226, 232, 240, opacity)
+        // Light mode: rgba(15, 23, 42, opacity)
+        if (isLight) {
+          ctx.fillStyle = `rgba(15, 23, 42, ${Math.min(0.18, opacity * d.originalAlpha * 1.1)})`;
+        } else {
+          ctx.fillStyle = `rgba(226, 232, 240, ${Math.min(0.25, opacity * d.originalAlpha)})`;
+        }
         ctx.fill();
       }
 

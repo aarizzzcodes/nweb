@@ -49,6 +49,9 @@ export const Footer: React.FC = () => {
                     <a href="#projects" className="footer-nav-link">Featured Projects</a>
                   </li>
                   <li>
+                    <a href="#gallery" className="footer-nav-link">Hardware Photo Gallery</a>
+                  </li>
+                  <li>
                     <a href="#sensors-lab" className="footer-nav-link">22-Sensor Hardware Lab</a>
                   </li>
                   <li>

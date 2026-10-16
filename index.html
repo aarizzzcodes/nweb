@@ -18,7 +18,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 
-  <!-- GitHub Pages URL Sanitizer -->
+  <!-- GitHub Pages SPA URL Sanitizer -->
   <script>
     (function () {
       var search = window.location.search;
@@ -31,6 +31,36 @@
 </head>
 <body>
   <div id="root"></div>
+
+  <!-- Vite entry for development and build bundling -->
   <script type="module" src="/src/main.tsx"></script>
+
+  <!-- GitHub Pages Static Root Fallback:
+       Active ONLY on GitHub Pages (*.github.io) if /src/main.tsx failed to load.
+       Never executes in Vite dev environments or AI Studio preview. -->
+  <script>
+    (function () {
+      var isGitHubPages = window.location.hostname.endsWith('github.io');
+      if (!isGitHubPages) return;
+
+      setTimeout(function () {
+        var root = document.getElementById('root');
+        if (root && root.children.length === 0 && !window.__appMounted) {
+          window.__appMounted = true;
+          var link = document.createElement('link');
+          link.rel = 'stylesheet';
+          link.crossOrigin = 'anonymous';
+          link.href = './assets/index.css';
+          document.head.appendChild(link);
+
+          var script = document.createElement('script');
+          script.type = 'module';
+          script.crossOrigin = 'anonymous';
+          script.src = './assets/index.js';
+          document.body.appendChild(script);
+        }
+      }, 800);
+    })();
+  </script>
 </body>
 </html>

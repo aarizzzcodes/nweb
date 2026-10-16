@@ -41,11 +41,15 @@ export const ORB_CONFIG = {
   parallaxStrength: 0.45,          // How much the orb tilts towards the mouse
 };
 
+import { ColorMode, ThemeColors } from '../types';
+
 interface OrganicAmberOrbProps {
   className?: string;
   customColor?: string;
   customRoughness?: number;
   customMetalness?: number;
+  colorMode?: ColorMode;
+  themeColors?: ThemeColors;
 }
 
 export const OrganicAmberOrb: React.FC<OrganicAmberOrbProps> = ({
@@ -53,6 +57,8 @@ export const OrganicAmberOrb: React.FC<OrganicAmberOrbProps> = ({
   customColor,
   customRoughness,
   customMetalness,
+  colorMode = 'dark',
+  themeColors,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const mouseRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
@@ -60,6 +66,8 @@ export const OrganicAmberOrb: React.FC<OrganicAmberOrbProps> = ({
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
+
+    const isLight = colorMode === 'light';
 
     // --- Scene, Camera, Renderer Setup ---
     const scene = new THREE.Scene();
@@ -80,56 +88,45 @@ export const OrganicAmberOrb: React.FC<OrganicAmberOrbProps> = ({
     renderer.setSize(container.clientWidth, container.clientHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.15;
+    renderer.toneMappingExposure = isLight ? 1.25 : 1.15;
     container.appendChild(renderer.domElement);
 
-    // --- Lighting Rig (Warm Amber, Golden Rim, and Depth Highlights) ---
+    // --- Lighting Rig (Adaptive per Dark/Light Theme) ---
     const { lights } = ORB_CONFIG;
 
-    const ambientLight = new THREE.AmbientLight(
-      lights.ambientColor,
-      lights.ambientIntensity
-    );
+    const ambientColor = themeColors ? themeColors.orbAmbientLight : (isLight ? '#cbd5e1' : lights.ambientColor);
+    const ambientIntensity = isLight ? 2.2 : lights.ambientIntensity;
+    const ambientLight = new THREE.AmbientLight(ambientColor, ambientIntensity);
     scene.add(ambientLight);
 
-    // Front-Right Warm Key Light
-    const keyLight = new THREE.PointLight(
-      lights.keyLightColor,
-      lights.keyLightIntensity,
-      35
-    );
+    // Front-Right Key Light
+    const keyColor = themeColors ? themeColors.orbKeyLight : (isLight ? '#ffffff' : lights.keyLightColor);
+    const keyLight = new THREE.PointLight(keyColor, isLight ? 4.6 : lights.keyLightIntensity, 40);
     keyLight.position.set(6, 6, 8);
     scene.add(keyLight);
 
-    // Behind Cavity Rim Light (creates the glowing contour through the inner hole)
-    const rimLight = new THREE.PointLight(
-      lights.rimLightColor,
-      lights.rimLightIntensity,
-      30
-    );
+    // Behind Cavity Rim Light (creates the contour glow through the inner hole)
+    const rimColor = themeColors ? themeColors.orbRimLight : (isLight ? '#93c5fd' : lights.rimLightColor);
+    const rimLight = new THREE.PointLight(rimColor, isLight ? 4.2 : lights.rimLightIntensity, 35);
     rimLight.position.set(0, -4, -6);
     scene.add(rimLight);
 
-    // Left Bottom Warm Fill Light
-    const fillLight = new THREE.PointLight(
-      lights.fillLightColor,
-      lights.fillLightIntensity,
-      25
-    );
+    // Left Bottom Fill Light
+    const fillColor = themeColors ? themeColors.orbFillLight : (isLight ? '#60a5fa' : lights.fillLightColor);
+    const fillLight = new THREE.PointLight(fillColor, isLight ? 3.0 : lights.fillLightIntensity, 30);
     fillLight.position.set(-7, -5, 5);
     scene.add(fillLight);
 
-    // Top Back Cool Rim Light (accents the metallic edge curves)
+    // Top Back Cool Rim Light (accents edge curvature)
     const coolRim = new THREE.PointLight(
-      lights.coolFillColor,
-      lights.coolFillIntensity,
+      isLight ? '#e2e8f0' : lights.coolFillColor,
+      isLight ? 2.0 : lights.coolFillIntensity,
       25
     );
     coolRim.position.set(2, 8, -4);
     scene.add(coolRim);
 
     // --- Organic Hollow Orb Geometry (Sculptured Plump Torus with Inner Cavity) ---
-    // A plump torus creates the iconic hollowed-cavity organic sphere seen in the video
     const geometry = new THREE.TorusGeometry(2.35, 1.45, 72, 128);
 
     // Save original position & normal arrays for fluid organic morphing
@@ -138,17 +135,18 @@ export const OrganicAmberOrb: React.FC<OrganicAmberOrbProps> = ({
     const originalPositions = new Float32Array(posAttr.array);
     const normals = geometry.attributes.normal.array as Float32Array;
 
-    // --- Metallic / Amber Physical Material ---
+    // --- Metallic / Physical Material ---
+    const orbBaseColor = customColor || (themeColors ? themeColors.orbColor : ORB_CONFIG.color);
     const material = new THREE.MeshPhysicalMaterial({
-      color: new THREE.Color(customColor || ORB_CONFIG.color),
-      metalness: customMetalness !== undefined ? customMetalness : ORB_CONFIG.metalness,
-      roughness: customRoughness !== undefined ? customRoughness : ORB_CONFIG.roughness,
+      color: new THREE.Color(orbBaseColor),
+      metalness: customMetalness !== undefined ? customMetalness : (isLight ? 0.88 : ORB_CONFIG.metalness),
+      roughness: customRoughness !== undefined ? customRoughness : (isLight ? 0.16 : ORB_CONFIG.roughness),
       clearcoat: ORB_CONFIG.clearcoat,
       clearcoatRoughness: ORB_CONFIG.clearcoatRoughness,
-      reflectivity: 0.95,
-      sheen: 0.85,
-      sheenColor: new THREE.Color('#ffe2a8'),
-      sheenRoughness: 0.25,
+      reflectivity: 0.98,
+      sheen: isLight ? 0.95 : 0.85,
+      sheenColor: new THREE.Color(isLight ? (themeColors?.accentCyan || '#93c5fd') : '#ffe2a8'),
+      sheenRoughness: 0.22,
     });
 
     const orbMesh = new THREE.Mesh(geometry, material);
@@ -177,13 +175,14 @@ export const OrganicAmberOrb: React.FC<OrganicAmberOrbProps> = ({
 
     // --- Animation & Morph Loop ---
     let animId: number;
-    let clock = new THREE.Clock();
+    const startTime = performance.now();
 
     const currentPositions = posAttr.array as Float32Array;
 
-    const animate = () => {
+    const animate = (timestamp: number) => {
       animId = requestAnimationFrame(animate);
-      const elapsedTime = clock.getElapsedTime() * ORB_CONFIG.morphSpeed;
+      const currentTime = timestamp || performance.now();
+      const elapsedTime = ((currentTime - startTime) * 0.001) * ORB_CONFIG.morphSpeed;
 
       // 1. Organic Harmonic Vertex Morphing (creates undulating liquid-metal surface)
       const morphStrength = ORB_CONFIG.morphStrength;
@@ -227,7 +226,7 @@ export const OrganicAmberOrb: React.FC<OrganicAmberOrbProps> = ({
       renderer.render(scene, camera);
     };
 
-    animate();
+    animate(performance.now());
 
     return () => {
       cancelAnimationFrame(animId);
